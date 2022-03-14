@@ -8,6 +8,6 @@ public interface CustomerRepository {
 
     List<Customer> list();
     Customer find(Long id);
-    Customer update(Customer customer);
+    Customer save(Customer customer);
     void delete(Customer customer);
 }

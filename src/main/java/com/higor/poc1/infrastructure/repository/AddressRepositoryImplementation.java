@@ -27,7 +27,7 @@ public class AddressRepositoryImplementation implements AddressRepository {
 
     @Transactional
     @Override
-    public Address update(Address Address) {
+    public Address save(Address Address) {
         return manager.merge(Address);
     }
 
