@@ -8,6 +8,6 @@ public interface AddressRepository {
 
     List<Address> list();
     Address find(Long id);
-    Address update(Address address);
+    Address save(Address address);
     void delete(Address address);
 }

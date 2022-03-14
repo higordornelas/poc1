@@ -27,7 +27,7 @@ public class CustomerRepositoryImplementation implements CustomerRepository {
 
     @Transactional
     @Override
-    public Customer update(Customer customer) {
+    public Customer save(Customer customer) {
         return manager.merge(customer);
     }
 
