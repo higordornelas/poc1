@@ -1,16 +1,21 @@
 package com.higor.poc1.api.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.higor.poc1.domain.model.Address;
+import com.higor.poc1.domain.model.Customer;
 import com.higor.poc1.domain.repository.AddressRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/addresses")
@@ -59,6 +64,33 @@ public class AddressController {
         } catch (NullPointerException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @PatchMapping("/{addressId}")
+    public ResponseEntity<?> patchAddress(@PathVariable Long addressId, @RequestBody Map<String, Object> fields) {
+        Address thisAddress = addressRepository.find(addressId);
+
+        try {
+            merge(fields, thisAddress);
+
+            return updateAddress(addressId, thisAddress);
+        } catch(Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    private void merge(Map<String, Object> sourceFields, Address addressToPatch) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Address thisAddress = objectMapper.convertValue(sourceFields, Address.class);
+
+        sourceFields.forEach((propertyName, propertyValue) -> {
+            Field field = ReflectionUtils.findField(Address.class, propertyName);
+            field.setAccessible(true);
+
+            Object newValue = ReflectionUtils.getField(field, thisAddress);
+
+            ReflectionUtils.setField(field, addressToPatch, newValue);
+        });
     }
 
     @DeleteMapping("/{addressId}")
