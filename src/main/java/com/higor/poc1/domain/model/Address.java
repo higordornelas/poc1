@@ -6,8 +6,6 @@ import java.util.Objects;
 @Entity
 public class Address {
 
-    public Address(){}
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
