@@ -1,9 +1,7 @@
 package com.higor.poc1.domain.model;
 
-import com.higor.poc1.domain.enumerator.CustomerType;
-
 import javax.persistence.*;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 public class Customer {
@@ -22,9 +20,8 @@ public class Customer {
     @Column(name = "phone_number")
     private String phoneNumber;
 
-    @ManyToOne
-    @JoinColumn(name = "address_id")
-    private Address address;
+    @OneToMany(cascade = CascadeType.PERSIST)
+    private List<Address> addresses = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -74,12 +71,12 @@ public class Customer {
         this.phoneNumber = phoneNumber;
     }
 
-    public Address getAdress() {
-        return address;
+    public List<Address> getAddresses() {
+        return addresses;
     }
 
-    public void setAdress(Address address) {
-        this.address = address;
+    public void setAddresses(List<Address> addresses) {
+        this.addresses = addresses;
     }
 
     @Override
