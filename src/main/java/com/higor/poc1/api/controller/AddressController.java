@@ -3,7 +3,8 @@ package com.higor.poc1.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.higor.poc1.domain.model.Address;
 import com.higor.poc1.domain.model.Customer;
-import com.higor.poc1.domain.repository.AddressRepository;
+import com.higor.poc1.domain.service.AddressService;
+import com.higor.poc1.domain.service.CustomerService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,16 +23,19 @@ import java.util.Map;
 public class AddressController {
 
     @Autowired
-    AddressRepository addressRepository;
+    AddressService addressService;
+
+    @Autowired
+    CustomerService customerService;
 
     @GetMapping
     public ResponseEntity<List<Address>> getAddress() {
-        return ResponseEntity.ok(addressRepository.list());
+        return ResponseEntity.ok(addressService.list());
     }
 
     @GetMapping("/{addressId}")
     public ResponseEntity<Address> findAddress(@PathVariable Long addressId) {
-        Address address = addressRepository.find(addressId);
+        Address address = addressService.find(addressId);
 
         if (address != null){
             return ResponseEntity.ok(address);
@@ -43,38 +47,68 @@ public class AddressController {
     @PostMapping
     public ResponseEntity<Address> addAddress(@RequestBody Address address) {
         try {
-            Address addressToSave = addressRepository.save(address);
+            Address addressToSave = addressService.save(address);
             URI location = URI.create("/addresses");
 
             return ResponseEntity.created(location).body(addressToSave);
         } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/{id}")
+    public ResponseEntity<Customer> addAddressToCustomer(@PathVariable Long id, @RequestBody Address address) {
+        try {
+            Customer customer = addressService.addAdressToCustomer(id, address);
+            URI location = URI.create("/addresses");
+
+            return ResponseEntity.created(location).body(customer);
+        } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
     }
 
     @PutMapping("/{addressId}")
     public ResponseEntity<Address> updateAddress(@PathVariable Long addressId, @RequestBody Address address) {
-        Address thisAddress = addressRepository.find(addressId);
+        Address thisAddress = addressService.find(addressId);
 
         try {
             BeanUtils.copyProperties(address, thisAddress, "id");
-            thisAddress = addressRepository.save(thisAddress);
+            thisAddress = addressService.save(thisAddress);
 
             return ResponseEntity.ok(thisAddress);
         } catch (NullPointerException e) {
+            e.printStackTrace();
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{addressId}")
+    public ResponseEntity<Address> deleteAddress(@PathVariable Long addressId) {
+        try {
+            addressService.delete(addressId);
+            return ResponseEntity.noContent().build();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return ResponseEntity.notFound().build();
+        } catch (DataIntegrityViolationException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
 
     @PatchMapping("/{addressId}")
     public ResponseEntity<?> patchAddress(@PathVariable Long addressId, @RequestBody Map<String, Object> fields) {
-        Address thisAddress = addressRepository.find(addressId);
+        Address thisAddress = addressService.find(addressId);
 
         try {
             merge(fields, thisAddress);
 
             return updateAddress(addressId, thisAddress);
         } catch(Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -91,19 +125,5 @@ public class AddressController {
 
             ReflectionUtils.setField(field, addressToPatch, newValue);
         });
-    }
-
-    @DeleteMapping("/{addressId}")
-    public ResponseEntity<Address> deleteAddress(@PathVariable Long addressId) {
-        Address address = addressRepository.find(addressId);
-
-        try {
-            addressRepository.delete(address);
-            return ResponseEntity.noContent().build();
-        } catch (NullPointerException e) {
-            return ResponseEntity.notFound().build();
-        } catch (DataIntegrityViolationException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
     }
 }
