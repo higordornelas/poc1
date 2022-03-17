@@ -3,3 +3,6 @@ insert into address (id, street, number, district, city, zip_code, state) values
 
 insert into customer (id, name, email, register_number, type, phone_number) values (1, 'Fulano', 'fulano@email.com', '111.111.111-11', 'LEGAL_PERSON', '1234-5678');
 insert into customer (id, name, email, register_number, type, phone_number) values (2, 'Ciclano', 'ciclano@email.com', '222.222.222-22', 'LEGAL_PERSON', '2345-6789');
+
+insert into customer_addresses(customer_id, addresses_id) values(1, 1);
+insert into customer_addresses(customer_id, addresses_id) values(2, 2);
