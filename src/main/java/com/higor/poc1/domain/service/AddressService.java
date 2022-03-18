@@ -22,7 +22,7 @@ public class AddressService {
 
     public Customer addAdressToCustomer(Long id, Address address) {
         Address addressToSave = save(address);
-        Customer customer = customerRepository.findById(id);
+        Customer customer = customerRepository.findById(id).orElse(null);
         customer.getAddresses().add(addressToSave);
         Customer customerToSave = customerRepository.save(customer);
 

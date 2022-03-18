@@ -77,7 +77,7 @@ public class AddressController {
         Optional<Address> thisAddress = addressRepository.findById(addressId);
 
         try {
-            BeanUtils.copyProperties(address, thisAddress, "id");
+            BeanUtils.copyProperties(address, thisAddress.get(), "id");
             Address savedAddress = addressService.save(thisAddress.get());
 
             return ResponseEntity.ok(savedAddress);
