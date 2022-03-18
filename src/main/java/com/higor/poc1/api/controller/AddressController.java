@@ -3,6 +3,7 @@ package com.higor.poc1.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.higor.poc1.domain.model.Address;
 import com.higor.poc1.domain.model.Customer;
+import com.higor.poc1.domain.repository.AddressRepository;
 import com.higor.poc1.domain.service.AddressService;
 import com.higor.poc1.domain.service.CustomerService;
 import org.springframework.beans.BeanUtils;
@@ -17,28 +18,29 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/addresses")
 public class AddressController {
 
     @Autowired
-    AddressService addressService;
+    private AddressRepository addressRepository;
 
     @Autowired
-    CustomerService customerService;
+    private AddressService addressService;
 
     @GetMapping
     public ResponseEntity<List<Address>> getAddress() {
-        return ResponseEntity.ok(addressService.list());
+        return ResponseEntity.ok(addressRepository.findAll());
     }
 
     @GetMapping("/{addressId}")
     public ResponseEntity<Address> findAddress(@PathVariable Long addressId) {
-        Address address = addressService.find(addressId);
+        Optional<Address> address = addressRepository.findById(addressId);
 
-        if (address != null){
-            return ResponseEntity.ok(address);
+        if (address.isPresent()){
+            return ResponseEntity.ok(address.get());
         }
 
         return ResponseEntity.notFound().build();
@@ -72,13 +74,13 @@ public class AddressController {
 
     @PutMapping("/{addressId}")
     public ResponseEntity<Address> updateAddress(@PathVariable Long addressId, @RequestBody Address address) {
-        Address thisAddress = addressService.find(addressId);
+        Optional<Address> thisAddress = addressRepository.findById(addressId);
 
         try {
             BeanUtils.copyProperties(address, thisAddress, "id");
-            thisAddress = addressService.save(thisAddress);
+            Address savedAddress = addressService.save(thisAddress.get());
 
-            return ResponseEntity.ok(thisAddress);
+            return ResponseEntity.ok(savedAddress);
         } catch (NullPointerException e) {
             e.printStackTrace();
             return ResponseEntity.notFound().build();
@@ -101,16 +103,15 @@ public class AddressController {
 
     @PatchMapping("/{addressId}")
     public ResponseEntity<?> patchAddress(@PathVariable Long addressId, @RequestBody Map<String, Object> fields) {
-        Address thisAddress = addressService.find(addressId);
+        Address thisAddress = addressRepository.findById(addressId).orElse(null);
 
-        try {
-            merge(fields, thisAddress);
-
-            return updateAddress(addressId, thisAddress);
-        } catch(Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
+        if (thisAddress == null) {
+            ResponseEntity.notFound().build();
         }
+
+        merge(fields, thisAddress);
+
+        return updateAddress(addressId, thisAddress);
     }
 
     private void merge(Map<String, Object> sourceFields, Address addressToPatch) {
