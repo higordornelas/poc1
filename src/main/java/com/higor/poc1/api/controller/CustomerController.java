@@ -2,7 +2,9 @@ package com.higor.poc1.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.higor.poc1.domain.model.Customer;
+import com.higor.poc1.domain.repository.CustomerRepository;
 import com.higor.poc1.domain.service.CustomerService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -14,25 +16,31 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/customers")
 public class CustomerController {
 
     @Autowired
-    CustomerService customerService;
+    private CustomerService customerService;
+
+    @Autowired
+    private CustomerRepository customerRepository;
 
     @GetMapping
     public ResponseEntity<List<Customer>> getCustomer() {
-        return ResponseEntity.ok(customerService.list());
+        List<Customer> customers = customerRepository.findAll();
+
+        return ResponseEntity.ok(customers);
     }
 
     @GetMapping("/{customerId}")
     public ResponseEntity<Customer> findCustomer(@PathVariable Long customerId) {
-        Customer customer = customerService.find(customerId);
+        Optional<Customer> customer = customerRepository.findById(customerId);
 
-        if (customer != null){
-            return ResponseEntity.ok(customer);
+        if (customer.isPresent()){
+            return ResponseEntity.ok(customer.get());
         }
 
         return ResponseEntity.notFound().build();
@@ -41,10 +49,10 @@ public class CustomerController {
     @PostMapping
     public ResponseEntity<Customer> addCustomer(@RequestBody Customer customer) {
         try {
-            Customer customerToSave = customerService.save(customer);
+            customer = customerService.savePost(customer);
             URI location = URI.create("/customers");
 
-            return ResponseEntity.created(location).body(customerToSave);
+            return ResponseEntity.created(location).body(customer);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().build();
@@ -54,10 +62,19 @@ public class CustomerController {
     @PutMapping("/{customerId}")
     public ResponseEntity<Customer> updateCustomer(@PathVariable Long customerId, @RequestBody Customer customer) {
         try {
-            return ResponseEntity.ok(customerService.update(customerId, customer));
+            Customer thisCustomer = customerRepository.findById(customerId).orElse(null);
+
+            if (thisCustomer != null) {
+                BeanUtils.copyProperties(customer, thisCustomer, "id");
+                thisCustomer = customerService.save(thisCustomer);
+
+                return ResponseEntity.ok(thisCustomer);
+            }
+
+            return ResponseEntity.notFound().build();
         } catch (NullPointerException e) {
             e.printStackTrace();
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -77,16 +94,15 @@ public class CustomerController {
 
     @PatchMapping("/{customerId}")
     public ResponseEntity<?> patchCustomer(@PathVariable Long customerId, @RequestBody Map<String, Object> fields) {
-        Customer thisCustomer = customerService.find(customerId);
+        Customer thisCustomer = customerRepository.findById(customerId).orElse(null);
 
-        try {
-            merge(fields, thisCustomer);
-
-            return ResponseEntity.ok(thisCustomer);
-        } catch(Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
+        if (thisCustomer == null) {
+            return ResponseEntity.notFound().build();
         }
+
+        merge(fields, thisCustomer);
+
+        return updateCustomer(customerId, thisCustomer);
     }
 
     private void merge(Map<String, Object> sourceFields, Customer customerToPatch) {

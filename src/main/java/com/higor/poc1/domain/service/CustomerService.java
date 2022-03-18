@@ -1,8 +1,9 @@
 package com.higor.poc1.domain.service;
 
+import com.higor.poc1.domain.model.Address;
 import com.higor.poc1.domain.model.Customer;
+import com.higor.poc1.domain.repository.AddressRepository;
 import com.higor.poc1.domain.repository.CustomerRepository;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,25 +14,35 @@ public class CustomerService {
 
     @Autowired
     private CustomerRepository customerRepository;
-
-    public List<Customer> list() {
-        return customerRepository.list();
-    }
-
-    public Customer find(Long id) {
-        return customerRepository.findById(id);
-    }
+    
+    @Autowired
+    private AddressRepository addressRepository;
 
     public Customer save(Customer customer) {
+        List<Address> addressList = customer.getAddresses();
+        int size = addressList.size();
+
+        for (int i = 0; (i < size); i++) {
+            Long addressId = customer.getAddresses().get(i).getId();
+            Address address = addressRepository.findById(addressId).get();
+            customer.getAddresses().remove(i);
+            customer.getAddresses().add(address);
+        }
+
         return customerRepository.save(customer);
     }
 
-    public Customer update(Long customerId, Customer customer) {
-        Customer thisCustomer = find(customerId);
-        BeanUtils.copyProperties(customer, thisCustomer, "id");
-        thisCustomer = save(thisCustomer);
+    public Customer savePost(Customer customer) {
+        List<Address> addressList = customer.getAddresses();
+        int size = addressList.size();
 
-        return thisCustomer;
+        for (int i = 0; (i < size); i++) {
+            Long addressId = customer.getAddresses().get(i).getId();
+            Address address = addressRepository.findById(addressId).get();
+            customer.getAddresses().set(i, address);
+        }
+
+        return customerRepository.save(customer);
     }
 
     public void delete(Long id) {
