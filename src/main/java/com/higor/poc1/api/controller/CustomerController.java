@@ -7,6 +7,10 @@ import com.higor.poc1.domain.service.CustomerService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
@@ -29,8 +33,11 @@ public class CustomerController {
     private CustomerRepository customerRepository;
 
     @GetMapping
-    public ResponseEntity<List<Customer>> getCustomer() {
-        List<Customer> customers = customerRepository.findAll();
+    public ResponseEntity<Page<Customer>> getCustomer(
+            @PageableDefault(sort = "id",
+                    direction = Sort.Direction.ASC, page = 0, size = 10)
+                    Pageable paginacao) {
+        Page<Customer> customers = customerRepository.findAll(paginacao);
 
         return ResponseEntity.ok(customers);
     }
@@ -117,5 +124,10 @@ public class CustomerController {
 
             ReflectionUtils.setField(field, customerToPatch, newValue);
         });
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Customer>> searchCustomer(String name, String email, String registerNumber, String type, String phoneNumber){
+        return ResponseEntity.ok(customerRepository.find(name, email, registerNumber, type, phoneNumber));
     }
 }
