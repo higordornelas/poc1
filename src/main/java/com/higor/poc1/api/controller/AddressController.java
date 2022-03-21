@@ -5,10 +5,13 @@ import com.higor.poc1.domain.model.Address;
 import com.higor.poc1.domain.model.Customer;
 import com.higor.poc1.domain.repository.AddressRepository;
 import com.higor.poc1.domain.service.AddressService;
-import com.higor.poc1.domain.service.CustomerService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
@@ -31,8 +34,11 @@ public class AddressController {
     private AddressService addressService;
 
     @GetMapping
-    public ResponseEntity<List<Address>> getAddress() {
-        return ResponseEntity.ok(addressRepository.findAll());
+    public ResponseEntity<Page<Address>> getAddress(
+            @PageableDefault(sort = "id",
+                    direction = Sort.Direction.ASC, page = 0, size = 10)
+                    Pageable paginacao) {
+        return ResponseEntity.ok(addressRepository.findAll(paginacao));
     }
 
     @GetMapping("/{addressId}")
@@ -126,5 +132,10 @@ public class AddressController {
 
             ReflectionUtils.setField(field, addressToPatch, newValue);
         });
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Address>> searchAddress(String street, String number, String district, String zipCode, String state){
+        return ResponseEntity.ok(addressRepository.find(street, number, district, zipCode, state));
     }
 }
