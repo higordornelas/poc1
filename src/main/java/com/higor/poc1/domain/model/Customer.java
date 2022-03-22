@@ -1,6 +1,8 @@
 package com.higor.poc1.domain.model;
 
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
 import java.util.*;
 
 @Entity
@@ -10,11 +12,20 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "Name cannot be null")
     private String name;
+
+    @Email(message = "Email should be valid")
     private String email;
+
+    @NotNull(message = "Register number cannot be null")
     @Column(name = "register_number")
     private String registerNumber;
+
+    @NotNull(message = "Type cannot be null")
     private String type;
+
+    @NotNull(message = "Phone Number cannot be null")
     @Column(name = "phone_number")
     private String phoneNumber;
 

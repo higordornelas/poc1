@@ -3,8 +3,10 @@ package com.higor.poc1.infrastructure.repository;
 import com.higor.poc1.domain.model.Address;
 import com.higor.poc1.domain.repository.AddressRepositoryQueries;
 import com.higor.poc1.domain.repository.AddressRepository;
+import org.hibernate.criterion.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -28,7 +30,7 @@ public class AddressRepositoryImpl implements AddressRepositoryQueries {
     public AddressRepository addressRepository;
 
     @Override
-    public List<Address> find(String street, String number, String district, String zipCode, String state) {
+    public Page<Address> find(String street, String number, String district, String zipCode, String state) {
         CriteriaBuilder builder = manager.getCriteriaBuilder();
 
         CriteriaQuery<Address> criteria = builder.createQuery(Address.class);
@@ -60,6 +62,10 @@ public class AddressRepositoryImpl implements AddressRepositoryQueries {
 
         TypedQuery<Address> query = manager.createQuery(criteria);
 
-        return query.getResultList();
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(
+                Sort.Order.desc("id")));
+        Page<Address> page = new PageImpl<Address>(query.getResultList(), pageable, 10);
+
+        return page;
     }
 }
