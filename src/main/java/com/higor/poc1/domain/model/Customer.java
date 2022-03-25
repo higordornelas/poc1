@@ -1,5 +1,7 @@
 package com.higor.poc1.domain.model;
 
+import com.higor.poc1.domain.enumerator.CustomerType;
+
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
@@ -22,8 +24,9 @@ public class Customer {
     @Column(name = "register_number")
     private String registerNumber;
 
+    @Enumerated(EnumType.STRING)
     @NotNull(message = "Type cannot be null")
-    private String type;
+    private CustomerType type;
 
     @NotNull(message = "Phone Number cannot be null")
     @Column(name = "phone_number")
@@ -64,11 +67,11 @@ public class Customer {
         this.registerNumber = registerNumber;
     }
 
-    public String getType() {
+    public CustomerType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(CustomerType type) {
         this.type = type;
     }
 
