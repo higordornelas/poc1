@@ -1,6 +1,10 @@
 package com.higor.poc1.domain.model;
 
+import com.higor.poc1.domain.enumerator.CustomerType;
+
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
 import java.util.*;
 
 @Entity
@@ -10,11 +14,21 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "Name cannot be null")
     private String name;
+
+    @Email(message = "Email should be valid")
     private String email;
+
+    @NotNull(message = "Register number cannot be null")
     @Column(name = "register_number")
     private String registerNumber;
-    private String type;
+
+    @Enumerated(EnumType.STRING)
+    @NotNull(message = "Type cannot be null")
+    private CustomerType type;
+
+    @NotNull(message = "Phone Number cannot be null")
     @Column(name = "phone_number")
     private String phoneNumber;
 
@@ -53,11 +67,11 @@ public class Customer {
         this.registerNumber = registerNumber;
     }
 
-    public String getType() {
+    public CustomerType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(CustomerType type) {
         this.type = type;
     }
 

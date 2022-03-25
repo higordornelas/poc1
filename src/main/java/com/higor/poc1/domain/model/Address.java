@@ -1,6 +1,7 @@
 package com.higor.poc1.domain.model;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @Entity
@@ -10,12 +11,23 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "Street cannot be null")
     private String street;
+
+    @NotNull(message = "Number cannot be null")
     private String number;
+
+    @NotNull(message = "District cannot be null")
     private String district;
+
+    @NotNull(message = "City cannot be null")
     private String city;
+
+    @NotNull(message = "Zip Code cannot be null")
     @Column(name = "zip_code")
     private String zipCode;
+
+    @NotNull(message = "State cannot be null")
     private String state;
 
     public Long getId() {

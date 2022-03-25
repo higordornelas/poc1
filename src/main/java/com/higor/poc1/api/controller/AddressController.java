@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.List;
@@ -37,8 +38,8 @@ public class AddressController {
     public ResponseEntity<Page<Address>> getAddress(
             @PageableDefault(sort = "id",
                     direction = Sort.Direction.ASC, page = 0, size = 10)
-                    Pageable paginacao) {
-        return ResponseEntity.ok(addressRepository.findAll(paginacao));
+                    Pageable pageable) {
+        return ResponseEntity.ok(addressRepository.findAll(pageable));
     }
 
     @GetMapping("/{addressId}")
@@ -53,7 +54,7 @@ public class AddressController {
     }
 
     @PostMapping
-    public ResponseEntity<Address> addAddress(@RequestBody Address address) {
+    public ResponseEntity<Address> addAddress(@Valid @RequestBody Address address) {
         try {
             Address addressToSave = addressService.save(address);
             URI location = URI.create("/addresses");
@@ -66,7 +67,7 @@ public class AddressController {
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<Customer> addAddressToCustomer(@PathVariable Long id, @RequestBody Address address) {
+    public ResponseEntity<Customer> addAddressToCustomer(@PathVariable Long id, @Valid @RequestBody Address address) {
         try {
             Customer customer = addressService.addAdressToCustomer(id, address);
             URI location = URI.create("/addresses");
@@ -79,7 +80,7 @@ public class AddressController {
     }
 
     @PutMapping("/{addressId}")
-    public ResponseEntity<Address> updateAddress(@PathVariable Long addressId, @RequestBody Address address) {
+    public ResponseEntity<Address> updateAddress(@PathVariable Long addressId, @Valid @RequestBody Address address) {
         Optional<Address> thisAddress = addressRepository.findById(addressId);
 
         try {
@@ -108,7 +109,7 @@ public class AddressController {
     }
 
     @PatchMapping("/{addressId}")
-    public ResponseEntity<?> patchAddress(@PathVariable Long addressId, @RequestBody Map<String, Object> fields) {
+    public ResponseEntity<?> patchAddress(@PathVariable Long addressId, @Valid @RequestBody Map<String, Object> fields) {
         Address thisAddress = addressRepository.findById(addressId).orElse(null);
 
         if (thisAddress == null) {
@@ -135,7 +136,8 @@ public class AddressController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Address>> searchAddress(String street, String number, String district, String zipCode, String state){
+    public ResponseEntity<Page<Address>> searchAddress(@PageableDefault(sort = "id",
+            direction = Sort.Direction.ASC, page = 0, size = 10) String street, String number, String district, String zipCode, String state){
         return ResponseEntity.ok(addressRepository.find(street, number, district, zipCode, state));
     }
 }

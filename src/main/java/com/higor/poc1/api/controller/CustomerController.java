@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.List;
@@ -36,8 +37,8 @@ public class CustomerController {
     public ResponseEntity<Page<Customer>> getCustomer(
             @PageableDefault(sort = "id",
                     direction = Sort.Direction.ASC, page = 0, size = 10)
-                    Pageable paginacao) {
-        Page<Customer> customers = customerRepository.findAll(paginacao);
+                    Pageable pageable) {
+        Page<Customer> customers = customerRepository.findAll(pageable);
 
         return ResponseEntity.ok(customers);
     }
@@ -54,7 +55,7 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<Customer> addCustomer(@RequestBody Customer customer) {
+    public ResponseEntity<Customer> addCustomer(@Valid @RequestBody Customer customer) {
         try {
             customer = customerService.savePost(customer);
             URI location = URI.create("/customers");
@@ -67,7 +68,7 @@ public class CustomerController {
     }
 
     @PutMapping("/{customerId}")
-    public ResponseEntity<Customer> updateCustomer(@PathVariable Long customerId, @RequestBody Customer customer) {
+    public ResponseEntity<Customer> updateCustomer(@PathVariable Long customerId, @Valid @RequestBody Customer customer) {
         try {
             Customer thisCustomer = customerRepository.findById(customerId).orElse(null);
 
@@ -100,7 +101,7 @@ public class CustomerController {
     }
 
     @PatchMapping("/{customerId}")
-    public ResponseEntity<?> patchCustomer(@PathVariable Long customerId, @RequestBody Map<String, Object> fields) {
+    public ResponseEntity<?> patchCustomer(@PathVariable Long customerId, @Valid @RequestBody Map<String, Object> fields) {
         Customer thisCustomer = customerRepository.findById(customerId).orElse(null);
 
         if (thisCustomer == null) {
@@ -127,7 +128,9 @@ public class CustomerController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Customer>> searchCustomer(String name, String email, String registerNumber, String type, String phoneNumber){
+    public ResponseEntity<List<Customer>> searchCustomer(@PageableDefault(sort = "id",
+            direction = Sort.Direction.ASC, page = 0, size = 10)
+                                                                     String name, String email, String registerNumber, String type, String phoneNumber){
         return ResponseEntity.ok(customerRepository.find(name, email, registerNumber, type, phoneNumber));
     }
 }
