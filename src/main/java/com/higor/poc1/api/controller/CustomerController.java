@@ -6,25 +6,22 @@ import com.higor.poc1.domain.repository.CustomerRepository;
 import com.higor.poc1.domain.service.CustomerService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.lang.reflect.Field;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/customers")
+@RequestMapping(value = "/customers", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CustomerController {
 
     @Autowired
@@ -34,79 +31,42 @@ public class CustomerController {
     private CustomerRepository customerRepository;
 
     @GetMapping
-    public ResponseEntity<Page<Customer>> getCustomer(
+    public Page<Customer> getCustomer(
             @PageableDefault(sort = "id",
                     direction = Sort.Direction.ASC, page = 0, size = 10)
                     Pageable pageable) {
-        Page<Customer> customers = customerRepository.findAll(pageable);
-
-        return ResponseEntity.ok(customers);
+        return customerRepository.findAll(pageable);
     }
 
     @GetMapping("/{customerId}")
-    public ResponseEntity<Customer> findCustomer(@PathVariable Long customerId) {
-        Optional<Customer> customer = customerRepository.findById(customerId);
-
-        if (customer.isPresent()){
-            return ResponseEntity.ok(customer.get());
-        }
-
-        return ResponseEntity.notFound().build();
+    public Customer findCustomer(@PathVariable Long customerId) {
+        return customerService.findOrFail(customerId);
     }
 
     @PostMapping
-    public ResponseEntity<Customer> addCustomer(@Valid @RequestBody Customer customer) {
-        try {
-            customer = customerService.savePost(customer);
-            URI location = URI.create("/customers");
-
-            return ResponseEntity.created(location).body(customer);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().build();
-        }
+    @ResponseStatus(HttpStatus.CREATED)
+    public Customer addCustomer(@Valid @RequestBody Customer customer) {
+            return customerService.savePost(customer);
     }
 
     @PutMapping("/{customerId}")
-    public ResponseEntity<Customer> updateCustomer(@PathVariable Long customerId, @Valid @RequestBody Customer customer) {
-        try {
-            Customer thisCustomer = customerRepository.findById(customerId).orElse(null);
+    public Customer updateCustomer(@PathVariable Long customerId, @Valid @RequestBody Customer customer) {
+            Customer thisCustomer = customerService.findOrFail(customerId);
 
-            if (thisCustomer != null) {
-                BeanUtils.copyProperties(customer, thisCustomer, "id");
-                thisCustomer = customerService.save(thisCustomer);
+            BeanUtils.copyProperties(customer, thisCustomer, "id");
 
-                return ResponseEntity.ok(thisCustomer);
-            }
-
-            return ResponseEntity.notFound().build();
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().build();
-        }
+            return customerService.save(thisCustomer);
     }
 
     @DeleteMapping("/{customerId}")
-    public ResponseEntity<Customer> deleteCustomer(@PathVariable Long customerId) {
-        try {
-            customerService.delete(customerId);
-            return ResponseEntity.noContent().build();
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-            return ResponseEntity.notFound().build();
-        } catch (DataIntegrityViolationException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCustomer(@PathVariable Long customerId) {
+        customerService.delete(customerId);
     }
 
     @PatchMapping("/{customerId}")
-    public ResponseEntity<?> patchCustomer(@PathVariable Long customerId, @Valid @RequestBody Map<String, Object> fields) {
-        Customer thisCustomer = customerRepository.findById(customerId).orElse(null);
-
-        if (thisCustomer == null) {
-            return ResponseEntity.notFound().build();
-        }
+    public Customer patchCustomer(@PathVariable Long customerId, @Valid @RequestBody Map<String, Object> fields) {
+        Customer thisCustomer = customerService.findOrFail(customerId);
 
         merge(fields, thisCustomer);
 
@@ -128,9 +88,9 @@ public class CustomerController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Customer>> searchCustomer(@PageableDefault(sort = "id",
+    public List<Customer> searchCustomer(@PageableDefault(sort = "id",
             direction = Sort.Direction.ASC, page = 0, size = 10)
-                                                                     String name, String email, String registerNumber, String type, String phoneNumber){
-        return ResponseEntity.ok(customerRepository.find(name, email, registerNumber, type, phoneNumber));
+                                                     String name, String email, String registerNumber, String type, String phoneNumber){
+        return customerRepository.find(name, email, registerNumber, type, phoneNumber);
     }
 }
