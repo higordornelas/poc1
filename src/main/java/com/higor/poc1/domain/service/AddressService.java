@@ -1,5 +1,6 @@
 package com.higor.poc1.domain.service;
 
+import com.higor.poc1.domain.exception.AdressListFullException;
 import com.higor.poc1.domain.exception.EntityNotFoundException;
 import com.higor.poc1.domain.model.Address;
 import com.higor.poc1.domain.model.Customer;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class AddressService {
 
     public static final String MSG_ADDRESS_NOT_FOUND = "There is no Address with Id %d";
+    public static final String MSG_ADRESS_LIST_FULL = "Customer can't have more than 5 addresses!";
 
     @Autowired
     private AddressRepository addressRepository;
@@ -27,10 +29,15 @@ public class AddressService {
     public Customer addAdressToCustomer(Long id, Address address) {
         Address addressToSave = save(address);
         Customer customer = customerRepository.findById(id).orElse(null);
-        customer.getAddresses().add(addressToSave);
-        Customer customerToSave = customerRepository.save(customer);
 
-        return customerToSave;
+        if(customer.getAddresses().size() <= 5){
+            customer.getAddresses().add(addressToSave);
+            Customer customerToSave = customerRepository.save(customer);
+
+            return customerToSave;
+        } else {
+            throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
+        }
     }
 
     public void delete(Long id) {
