@@ -49,7 +49,7 @@ public class CustomerRepositoryImpl implements CustomerRepositoryQueries {
         }
 
         if (StringUtils.hasText(type)){
-            predicates.add(builder.like(root.get("type"), "%" + type + "%"));
+            predicates.add(builder.like(root.get("type").as(String.class), "%" + type + "%"));
         }
 
         if (StringUtils.hasText(phoneNumber)){
