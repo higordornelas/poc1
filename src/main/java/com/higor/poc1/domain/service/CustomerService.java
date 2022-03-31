@@ -1,5 +1,6 @@
 package com.higor.poc1.domain.service;
 
+import com.higor.poc1.domain.exception.AddressNotFoundException;
 import com.higor.poc1.domain.exception.AdressListFullException;
 import com.higor.poc1.domain.exception.EntityNotFoundException;
 import com.higor.poc1.domain.exception.ResourceNotFoundException;
@@ -19,7 +20,7 @@ public class CustomerService {
 
     public static final String MSG_CUSTOMER_NOT_FOUND = "There is no Customer with id %d";
 
-    public static final String MSG_RESOURCE_NOT_FOUND = "Designated Address(es) can't be found";
+    public static final String MSG_ADDRESS_NOT_FOUND = "There is no Address with Id %d";
 
     public static final String MSG_ADRESS_LIST_FULL = "Customer can't have more than 5 addresses!";
 
@@ -30,9 +31,11 @@ public class CustomerService {
     private AddressRepository addressRepository;
 
     public Customer save(Customer customer) {
-        if(customer.getAddresses().size() <= 5){
-            List<Address> addressList = customer.getAddresses();
-            int size = addressList.size();
+
+        try {
+            if(customer.getAddresses().size() <= 5){
+                List<Address> addressList = customer.getAddresses();
+                int size = addressList.size();
 
                 for (int i = 0; (i < size); i++) {
                     Long addressId = customer.getAddresses().get(i).getId();
@@ -40,9 +43,12 @@ public class CustomerService {
                     customer.getAddresses().remove(i);
                     customer.getAddresses().add(address);
                 }
-            return customerRepository.save(customer);
-        } else {
-            throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
+                return customerRepository.save(customer);
+            } else {
+                throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
+            }
+        } catch (NoSuchElementException e) {
+            throw new AddressNotFoundException(MSG_ADDRESS_NOT_FOUND);
         }
     }
 

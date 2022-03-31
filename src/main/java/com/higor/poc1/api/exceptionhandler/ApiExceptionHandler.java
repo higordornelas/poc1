@@ -2,6 +2,7 @@ package com.higor.poc1.api.exceptionhandler;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.PropertyBindingException;
+import com.higor.poc1.domain.exception.AddressNotFoundException;
 import com.higor.poc1.domain.exception.AdressListFullException;
 import com.higor.poc1.domain.exception.EntityNotFoundException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -127,11 +128,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
     }
 
-    @ExceptionHandler(NoSuchElementException.class)
-    protected ResponseEntity<?> handleNoSuchElement(NoSuchElementException ex, WebRequest request) {
-        HttpStatus status = HttpStatus.NOT_FOUND;
+    @ExceptionHandler(AddressNotFoundException.class)
+    protected ResponseEntity<?> handleAddressNotFound(AddressNotFoundException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
         ProblemType problemType = ProblemType.RESOURCE_NOT_FOUND;
-        String detail = String.format("Element provided can't be found. Please insert a valid element.");
+        String detail = String.format("Address provided can't be found. Please insert a valid address.");
 
         Problem problem = createProblemBuilder(status, problemType, detail);
 

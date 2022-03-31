@@ -1,5 +1,6 @@
 package com.higor.poc1.domain.service;
 
+import com.higor.poc1.domain.exception.AddressNotFoundException;
 import com.higor.poc1.domain.exception.AdressListFullException;
 import com.higor.poc1.domain.exception.EntityNotFoundException;
 import com.higor.poc1.domain.model.Address;
@@ -30,14 +31,20 @@ public class AddressService {
         Address addressToSave = save(address);
         Customer customer = customerRepository.findById(id).orElse(null);
 
-        if(customer.getAddresses().size() <= 5){
-            customer.getAddresses().add(addressToSave);
-            Customer customerToSave = customerRepository.save(customer);
+        try {
+            if(customer.getAddresses().size() <= 5){
+                customer.getAddresses().add(addressToSave);
+                Customer customerToSave = customerRepository.save(customer);
 
-            return customerToSave;
-        } else {
-            throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
+                return customerToSave;
+            } else {
+                throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
+            }
+        } catch (EntityNotFoundException e) {
+            throw new AddressNotFoundException(String.format(MSG_ADDRESS_NOT_FOUND));
         }
+
+
     }
 
     public void delete(Long id) {
