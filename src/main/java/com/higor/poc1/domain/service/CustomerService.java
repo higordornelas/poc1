@@ -34,17 +34,12 @@ public class CustomerService {
             List<Address> addressList = customer.getAddresses();
             int size = addressList.size();
 
-            try {
                 for (int i = 0; (i < size); i++) {
                     Long addressId = customer.getAddresses().get(i).getId();
                     Address address = addressRepository.findById(addressId).get();
                     customer.getAddresses().remove(i);
                     customer.getAddresses().add(address);
                 }
-            } catch (NoSuchElementException e){
-                throw new ResourceNotFoundException(
-                        String.format(MSG_RESOURCE_NOT_FOUND));
-            }
             return customerRepository.save(customer);
         } else {
             throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
