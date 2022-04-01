@@ -1,17 +1,16 @@
 package com.higor.poc1.domain.service;
 
-import com.higor.poc1.domain.exception.AddressNotFoundException;
-import com.higor.poc1.domain.exception.AdressListFullException;
-import com.higor.poc1.domain.exception.EntityNotFoundException;
-import com.higor.poc1.domain.exception.ResourceNotFoundException;
+import com.higor.poc1.domain.exception.*;
 import com.higor.poc1.domain.model.Address;
 import com.higor.poc1.domain.model.Customer;
 import com.higor.poc1.domain.repository.AddressRepository;
 import com.higor.poc1.domain.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -24,6 +23,8 @@ public class CustomerService {
 
     public static final String MSG_ADRESS_LIST_FULL = "Customer can't have more than 5 addresses!";
 
+    public static final String MSG_ADRESS_IN_USE = "Address already registered to another Customer!";
+
     @Autowired
     private CustomerRepository customerRepository;
     
@@ -34,38 +35,22 @@ public class CustomerService {
 
         try {
             if(customer.getAddresses().size() <= 5){
-                List<Address> addressList = customer.getAddresses();
-                int size = addressList.size();
+                List<Address> addressList = List.copyOf(customer.getAddresses());
+                customer.getAddresses().clear();
 
-                for (int i = 0; (i < size); i++) {
-                    Long addressId = customer.getAddresses().get(i).getId();
-                    Address address = addressRepository.findById(addressId).get();
-                    customer.getAddresses().remove(i);
-                    customer.getAddresses().add(address);
-                }
+                addressList.forEach(address -> {
+                    Address addressToSave = addressRepository.findById(address.getId()).get();
+                    customer.getAddresses().add(addressToSave);
+                });
+
                 return customerRepository.save(customer);
             } else {
                 throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
             }
         } catch (NoSuchElementException e) {
             throw new AddressNotFoundException(MSG_ADDRESS_NOT_FOUND);
-        }
-    }
-
-    public Customer savePost(Customer customer) {
-        if(customer.getAddresses().size() <= 5){
-            List<Address> addressList = customer.getAddresses();
-            int size = addressList.size();
-
-            for (int i = 0; (i < size); i++) {
-                Long addressId = customer.getAddresses().get(i).getId();
-                Address address = addressRepository.findById(addressId).get();
-                customer.getAddresses().set(i, address);
-            }
-
-            return customerRepository.save(customer);
-        } else {
-            throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
+        } catch (DataIntegrityViolationException e) {
+            throw new AdressInUseException(MSG_ADRESS_IN_USE);
         }
     }
 
