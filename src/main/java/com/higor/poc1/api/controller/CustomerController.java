@@ -12,7 +12,6 @@ import com.higor.poc1.domain.service.CustomerService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -21,10 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.lang.reflect.Field;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -54,9 +51,7 @@ public class CustomerController {
 
         Page<Customer> customerPage = customerRepository.findAll(pageable);
 
-        Page<CustomerDTO> customerDtoPage = customerPage.map(customer -> {
-            CustomerDTO dto = customerDTOAssembler.toDTO(customer);
-            return dto;});
+        Page<CustomerDTO> customerDtoPage = customerPage.map(customer -> customerDTOAssembler.toDTO(customer));
 
         return customerDtoPage;
     }
@@ -78,7 +73,6 @@ public class CustomerController {
     @PutMapping("/{customerId}")
     public CustomerDTO updateCustomer(@PathVariable Long customerId, @Valid @RequestBody CustomerInput customerInput) {
         Customer customer = customerInputDisassembler.toDomainObject(customerInput);
-
         Customer thisCustomer = customerService.findOrFail(customerId);
 
         BeanUtils.copyProperties(customer, thisCustomer, "id");
@@ -116,9 +110,13 @@ public class CustomerController {
     }
 
     @GetMapping("/search")
-    public List<Customer> searchCustomer(@PageableDefault(sort = "id",
-            direction = Sort.Direction.ASC, page = 0, size = 10)
-                                                     String name, String email, String registerNumber, String type, String phoneNumber){
-        return customerRepository.find(name, email, registerNumber, type, phoneNumber);
+    public Page<CustomerDTO> searchCustomer(@PageableDefault(sort = "id",
+            direction = Sort.Direction.ASC, page = 0, size = 10) Pageable pageable,
+                String name, String email, String registerNumber, String type, String phoneNumber){
+
+        Page<Customer> customerPage = customerRepository.find(name, email, registerNumber, type, phoneNumber, pageable);
+        Page<CustomerDTO> customersDTO = customerPage.map(customer -> customerDTOAssembler.toDTO(customer));
+
+        return customersDTO;
     }
 }
