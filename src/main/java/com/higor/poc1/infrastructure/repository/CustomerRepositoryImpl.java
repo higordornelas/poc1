@@ -5,6 +5,7 @@ import com.higor.poc1.domain.repository.CustomerRepository;
 import com.higor.poc1.domain.repository.CustomerRepositoryQueries;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -17,6 +18,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository
 public class CustomerRepositoryImpl implements CustomerRepositoryQueries {
@@ -28,7 +30,7 @@ public class CustomerRepositoryImpl implements CustomerRepositoryQueries {
     public CustomerRepository customerRepository;
 
     @Override
-    public List<Customer> find(String name, String email, String registerNumber, String type, String phoneNumber) {
+    public Page<Customer> find(String name, String email, String registerNumber, String type, String phoneNumber, Pageable pageable) {
         CriteriaBuilder builder = manager.getCriteriaBuilder();
 
         CriteriaQuery<Customer> criteria = builder.createQuery(Customer.class);
@@ -60,6 +62,11 @@ public class CustomerRepositoryImpl implements CustomerRepositoryQueries {
 
         TypedQuery<Customer> query = manager.createQuery(criteria);
 
-        return query.getResultList();
+        List<Customer> pageList = query.getResultList().stream()
+                .skip(pageable.getPageSize() * pageable.getPageNumber())
+                .limit(pageable.getPageSize())
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(pageList, pageable, pageList.size());
     }
 }
