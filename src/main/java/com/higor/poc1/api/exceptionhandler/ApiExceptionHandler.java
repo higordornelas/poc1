@@ -8,10 +8,15 @@ import com.higor.poc1.domain.exception.AdressListFullException;
 import com.higor.poc1.domain.exception.EntityNotFoundException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -19,10 +24,14 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+
+    @Autowired
+    private MessageSource messageSource;
 
     protected ResponseEntity<Object> handleUncaught(Exception ex, WebRequest request){
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -35,6 +44,26 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         Problem problem = createProblemBuilder(status, problemType, detail);
 
         return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
+
+        ProblemType problemType = ProblemType.INVALID_PARAMETER;
+        String detail = "One or more fields are invalid. Please correct it and try again.";
+
+        BindingResult bindingResult = ex.getBindingResult();
+
+        List<Problem.Field> problemFields = bindingResult.getFieldErrors().stream()
+                .map(fieldError -> {
+                    String message = messageSource.getMessage(fieldError, LocaleContextHolder.getLocale());
+                    return createFieldBuilder(fieldError.getField(), message);
+                })
+                .collect(Collectors.toList());
+
+        Problem problem = createProblemBuilder(status, problemType, detail, problemFields);
+
+        return handleExceptionInternal(ex, problem, headers, status, request);
     }
 
     @Override
@@ -189,5 +218,25 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setDetail(detail);
 
         return problem;
+    }
+
+    private Problem createProblemBuilder(HttpStatus status
+            , ProblemType problemType, String detail, List<Problem.Field> fields) {
+        Problem problem = new Problem();
+        problem.setStatus(status.value());
+        problem.setType(problemType.getUri());
+        problem.setTitle(problemType.getTitle());
+        problem.setDetail(detail);
+        problem.setFields(fields);
+
+        return problem;
+    }
+
+    private Problem.Field createFieldBuilder(String name, String userMessage) {
+        Problem.Field field = new Problem.Field();
+        field.setName(name);
+        field.setUserMessage(userMessage);
+
+        return field;
     }
 }

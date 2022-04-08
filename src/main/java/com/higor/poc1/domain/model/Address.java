@@ -2,6 +2,7 @@ package com.higor.poc1.domain.model;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.util.Objects;
 
 @Entity
@@ -24,6 +25,7 @@ public class Address {
     private String city;
 
     @NotNull(message = "Zip Code cannot be null")
+    @Pattern(regexp = "\\d{5}-\\d{3}")
     @Column(name = "zip_code")
     private String zipCode;
 

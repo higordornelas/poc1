@@ -41,7 +41,7 @@ public class AddressService {
                 throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
             }
         } catch (EntityNotFoundException e) {
-            throw new AddressNotFoundException(String.format(MSG_ADDRESS_NOT_FOUND));
+            throw new AddressNotFoundException(String.format(MSG_ADDRESS_NOT_FOUND, id));
         }
 
 
@@ -52,7 +52,7 @@ public class AddressService {
             addressRepository.deleteById(id);
         } catch (EmptyResultDataAccessException e) {
             throw new EntityNotFoundException(
-                    String.format(MSG_ADDRESS_NOT_FOUND)
+                    String.format(MSG_ADDRESS_NOT_FOUND, id)
             );
         }
     }
