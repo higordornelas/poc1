@@ -2,10 +2,9 @@ package com.higor.poc1.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.higor.poc1.api.assembler.CustomerDTOAssembler;
-import com.higor.poc1.api.assembler.CustomerInputAssembler;
-import com.higor.poc1.api.assembler.CustomerInputDisassembler;
+import com.higor.poc1.api.assembler.CustomerDTODisassembler;
 import com.higor.poc1.api.model.CustomerDTO;
-import com.higor.poc1.api.model.input.CustomerInput;
+import com.higor.poc1.domain.exception.AddressNotFoundException;
 import com.higor.poc1.domain.model.Customer;
 import com.higor.poc1.domain.repository.CustomerRepository;
 import com.higor.poc1.domain.service.CustomerService;
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping(value = "/customers", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -38,10 +38,7 @@ public class CustomerController {
     CustomerDTOAssembler customerDTOAssembler;
 
     @Autowired
-    CustomerInputDisassembler customerInputDisassembler;
-
-    @Autowired
-    CustomerInputAssembler customerInputAssembler;
+    CustomerDTODisassembler customerDTODisassembler;
 
     @GetMapping
     public Page<CustomerDTO> getCustomer(
@@ -64,15 +61,19 @@ public class CustomerController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CustomerDTO addCustomer(@Valid @RequestBody CustomerInput customerInput) {
-        Customer customer = customerInputDisassembler.toDomainObject(customerInput);
+    public CustomerDTO addCustomer(@Valid @RequestBody CustomerDTO customerDTO) {
+        try {
+            Customer customer = customerDTODisassembler.toDomainObject(customerDTO);
 
-        return customerDTOAssembler.toDTO(customerService.save(customer));
+            return customerDTOAssembler.toDTO(customerService.save(customer));
+        } catch (NoSuchElementException e) {
+            throw new AddressNotFoundException(e.getMessage());
+        }
     }
 
     @PutMapping("/{customerId}")
-    public CustomerDTO updateCustomer(@PathVariable Long customerId, @Valid @RequestBody CustomerInput customerInput) {
-        Customer customer = customerInputDisassembler.toDomainObject(customerInput);
+    public CustomerDTO updateCustomer(@PathVariable Long customerId, @Valid @RequestBody CustomerDTO customerDTO) {
+        Customer customer = customerDTODisassembler.toDomainObject(customerDTO);
         Customer thisCustomer = customerService.findOrFail(customerId);
 
         BeanUtils.copyProperties(customer, thisCustomer, "id");
@@ -92,7 +93,7 @@ public class CustomerController {
 
         merge(fields, thisCustomer);
 
-        return updateCustomer(customerId, customerInputAssembler.toInput(thisCustomer));
+        return updateCustomer(customerId, customerDTOAssembler.toDTO(thisCustomer));
     }
 
     private void merge(Map<String, Object> sourceFields, Customer customerToPatch) {

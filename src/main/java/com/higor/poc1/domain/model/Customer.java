@@ -1,26 +1,36 @@
 package com.higor.poc1.domain.model;
 
+import com.higor.poc1.domain.enumerator.CustomerGroupSequenceProvider;
 import com.higor.poc1.domain.enumerator.CustomerType;
+import org.hibernate.validator.constraints.br.CNPJ;
+import org.hibernate.validator.constraints.br.CPF;
+import org.hibernate.validator.group.GroupSequenceProvider;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.util.*;
 
 @Entity
+@GroupSequenceProvider(CustomerGroupSequenceProvider.class)
 public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "Name cannot be null")
+    @NotBlank(message = "Name cannot be null")
     private String name;
 
+    @NotBlank
     @Email(message = "Email should be valid")
     private String email;
 
-    @NotNull(message = "Register number cannot be null")
+    @NotBlank(message = "Register number cannot be blank")
+//    @CPF(groups = CustomerType.CpfGroup.class)
+//    @CNPJ(groups = CustomerType.CnpjGroup.class)
     @Column(name = "register_number")
     private String registerNumber;
 
@@ -28,7 +38,8 @@ public class Customer {
     @NotNull(message = "Type cannot be null")
     private CustomerType type;
 
-    @NotNull(message = "Phone Number cannot be null")
+//    @NotBlank(message = "Phone Number cannot be null")
+//    @Pattern(regexp = "\\d{4}-\\d{4}")
     @Column(name = "phone_number")
     private String phoneNumber;
 

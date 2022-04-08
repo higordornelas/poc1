@@ -2,10 +2,8 @@ package com.higor.poc1.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.higor.poc1.api.assembler.AddressDTOAssembler;
-import com.higor.poc1.api.assembler.AddressInputAssembler;
-import com.higor.poc1.api.assembler.AddressInputDisassembler;
+import com.higor.poc1.api.assembler.AddressDTODisassembler;
 import com.higor.poc1.api.model.AddressDTO;
-import com.higor.poc1.api.model.input.AddressInput;
 import com.higor.poc1.domain.model.Address;
 import com.higor.poc1.domain.model.Customer;
 import com.higor.poc1.domain.repository.AddressRepository;
@@ -13,7 +11,6 @@ import com.higor.poc1.domain.service.AddressService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -40,10 +37,7 @@ public class AddressController {
     private AddressDTOAssembler addressDTOAssembler;
 
     @Autowired
-    private AddressInputAssembler addressInputAssembler;
-
-    @Autowired
-    private AddressInputDisassembler addressInputDisassembler;
+    private AddressDTODisassembler addressDTODisassembler;
 
     @GetMapping
     public Page<AddressDTO> getAddress(
@@ -66,8 +60,8 @@ public class AddressController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public AddressDTO addAddress(@Valid @RequestBody AddressInput addressInput) {
-        Address address = addressInputDisassembler.toDomainObject(addressInput);
+    public AddressDTO addAddress(@Valid @RequestBody AddressDTO addressDTO) {
+        Address address = addressDTODisassembler.toDomainObject(addressDTO);
 
         return addressDTOAssembler.toDTO(addressService.save(address));
     }
@@ -79,8 +73,8 @@ public class AddressController {
     }
 
     @PutMapping("/{addressId}")
-    public AddressDTO updateAddress(@PathVariable Long addressId, @Valid @RequestBody AddressInput addressInput) {
-        Address address = addressInputDisassembler.toDomainObject(addressInput);
+    public AddressDTO updateAddress(@PathVariable Long addressId, @Valid @RequestBody AddressDTO addressDTO) {
+        Address address = addressDTODisassembler.toDomainObject(addressDTO);
         Address thisAddress = addressService.findOrFail(addressId);
 
         BeanUtils.copyProperties(address, thisAddress, "id");
@@ -100,7 +94,7 @@ public class AddressController {
 
         merge(fields, thisAddress);
 
-        return updateAddress(addressId, addressInputAssembler.toInput(thisAddress));
+        return updateAddress(addressId, addressDTOAssembler.toDTO(thisAddress));
     }
 
     private void merge(Map<String, Object> sourceFields, Address addressToPatch) {
