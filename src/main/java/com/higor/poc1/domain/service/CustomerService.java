@@ -9,10 +9,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validator;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 @Service
 public class CustomerService {
@@ -70,4 +77,19 @@ public class CustomerService {
                         String.format(MSG_CUSTOMER_NOT_FOUND, customerId)
                 ));
     }
+
+//    private void verifyCustomer(Customer customer) {
+//        BeanPropertyBindingResult result = new BeanPropertyBindingResult(customer, "customer");
+//        SpringValidatorAdapter adapter = new SpringValidatorAdapter(this.validator);
+//        adapter.validate(customer, result);
+//
+//        if (result.hasErrors()) {
+//            try {
+//                throw new MethodArgumentNotValidException(new MethodParameter(
+//                        this.getClass().getDeclaredMethod("verifyCard", YourClassName.class), 0), errors);
+//            } catch (MethodArgumentNotValidException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 }

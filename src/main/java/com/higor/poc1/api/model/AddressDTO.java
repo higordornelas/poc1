@@ -8,24 +8,24 @@ public class AddressDTO {
 
     private long id;
 
-    @NotNull(message = "Street cannot be null")
+    @NotNull
     private String street;
 
-    @NotNull(message = "Number cannot be null")
+    @NotNull
     private String number;
 
-    @NotNull(message = "District cannot be null")
+    @NotNull
     private String district;
 
-    @NotNull(message = "City cannot be null")
+    @NotNull
     private String city;
 
-    @NotNull(message = "Zip Code cannot be null")
+    @NotNull
     @Pattern(regexp = "\\d{5}-\\d{3}")
     @Column(name = "zip_code")
     private String zipCode;
 
-    @NotNull(message = "State cannot be null")
+    @NotNull
     private String state;
 
     public long getId() {

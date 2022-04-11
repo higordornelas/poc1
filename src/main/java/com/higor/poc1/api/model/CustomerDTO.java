@@ -2,17 +2,38 @@ package com.higor.poc1.api.model;
 
 import com.higor.poc1.domain.enumerator.CustomerType;
 
+import javax.persistence.Column;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CustomerDTO {
 
     private long id;
+
+    @NotBlank
     private String name;
+
+    @NotBlank
+    @Email
     private String email;
+
+    @NotBlank
+//    @CPF(groups = CpfGroup.class)
+//    @CNPJ(groups = CnpjGroup.class)
     private String registerNumber;
+
+    @NotNull
     private CustomerType type;
+
+    @NotBlank
+    @Pattern(regexp = "\\d{4}-\\d{4}")
+    @Column(name = "phone_number")
     private String phoneNumber;
+
     private List<AddressDTO> addresses = new ArrayList<>();
 
     public long getId() {
