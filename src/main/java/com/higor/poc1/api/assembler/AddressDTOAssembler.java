@@ -19,6 +19,7 @@ public class AddressDTOAssembler {
         addressDTO.setCity(address.getCity());
         addressDTO.setZipCode(address.getZipCode());
         addressDTO.setState(address.getState());
+        addressDTO.setMain(address.isMain());
 
         return addressDTO;
     }

@@ -28,6 +28,8 @@ public class AddressDTO {
     @NotNull
     private String state;
 
+    private boolean isMain;
+
     public long getId() {
         return id;
     }
@@ -82,5 +84,13 @@ public class AddressDTO {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public boolean isMain() {
+        return isMain;
+    }
+
+    public void setMain(boolean main) {
+        isMain = main;
     }
 }

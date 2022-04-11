@@ -3,10 +3,14 @@ package com.higor.poc1.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.higor.poc1.api.assembler.CustomerDTOAssembler;
 import com.higor.poc1.api.assembler.CustomerDTODisassembler;
+import com.higor.poc1.api.model.AddressDTO;
 import com.higor.poc1.api.model.CustomerDTO;
 import com.higor.poc1.domain.exception.AddressNotFoundException;
+import com.higor.poc1.domain.exception.ResourceNotFoundException;
+import com.higor.poc1.domain.model.Address;
 import com.higor.poc1.domain.model.Customer;
 import com.higor.poc1.domain.repository.CustomerRepository;
+import com.higor.poc1.domain.service.AddressService;
 import com.higor.poc1.domain.service.CustomerService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +73,19 @@ public class CustomerController {
         } catch (NoSuchElementException e) {
             throw new AddressNotFoundException(e.getMessage());
         }
+    }
+
+    @PostMapping("/{id}/addresses")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Customer addAddressToCustomer(@PathVariable Long id, @Valid @RequestBody Address address) {
+        return customerService.addAdressToCustomer(id, address);
+    }
+
+    @GetMapping("/{customerId}/addresses/{addressId}/main")
+    public CustomerDTO chooseMainAddress(@PathVariable Long customerId, @PathVariable Long addressId) {
+        Customer setMainAddress = customerService.chooseMainAddress(customerId, addressId);
+
+        return customerDTOAssembler.toDTO(setMainAddress);
     }
 
     @PutMapping("/{customerId}")

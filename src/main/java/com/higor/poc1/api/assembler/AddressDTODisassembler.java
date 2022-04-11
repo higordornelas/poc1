@@ -16,6 +16,7 @@ public class AddressDTODisassembler {
         address.setCity(addressDTO.getCity());
         address.setZipCode(addressDTO.getZipCode());
         address.setState(addressDTO.getState());
+        address.setMain(addressDTO.isMain());
         
         return address;
     }
