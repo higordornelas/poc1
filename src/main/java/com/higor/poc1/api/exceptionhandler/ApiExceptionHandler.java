@@ -2,10 +2,7 @@ package com.higor.poc1.api.exceptionhandler;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.PropertyBindingException;
-import com.higor.poc1.domain.exception.AddressNotFoundException;
-import com.higor.poc1.domain.exception.AdressInUseException;
-import com.higor.poc1.domain.exception.AdressListFullException;
-import com.higor.poc1.domain.exception.EntityNotFoundException;
+import com.higor.poc1.domain.exception.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,6 +162,17 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         ProblemType problemType = ProblemType.RESOURCE_NOT_FOUND;
         String detail = String.format("Address provided can't be found. Please insert a valid address.");
+
+        Problem problem = createProblemBuilder(status, problemType, detail);
+
+        return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(AddressNotOfCustomerException.class)
+    protected ResponseEntity<?> handleAddressNotOfCustomer(AddressNotOfCustomerException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ProblemType problemType = ProblemType.RESOURCE_NOT_FOUND;
+        String detail = String.format("Address doesn't belong to this Customer.");
 
         Problem problem = createProblemBuilder(status, problemType, detail);
 

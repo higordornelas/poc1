@@ -66,12 +66,6 @@ public class AddressController {
         return addressDTOAssembler.toDTO(addressService.save(address));
     }
 
-    @PostMapping("/{id}")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Customer addAddressToCustomer(@PathVariable Long id, @Valid @RequestBody Address address) {
-        return addressService.addAdressToCustomer(id, address);
-    }
-
     @PutMapping("/{addressId}")
     public AddressDTO updateAddress(@PathVariable Long addressId, @Valid @RequestBody AddressDTO addressDTO) {
         Address address = addressDTODisassembler.toDomainObject(addressDTO);

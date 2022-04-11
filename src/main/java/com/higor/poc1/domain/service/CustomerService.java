@@ -28,6 +28,8 @@ public class CustomerService {
 
     public static final String MSG_ADDRESS_NOT_FOUND = "There is no Address with Id %d";
 
+    public static final String MSG_ADDRESS_NOT_OF_CUSTOMER = "Customer with Id %d doesn't have an Address with Id %d";
+
     public static final String MSG_ADRESS_LIST_FULL = "Customer can't have more than 5 addresses!";
 
     public static final String MSG_ADRESS_IN_USE = "Address already registered to another Customer!";
@@ -37,6 +39,9 @@ public class CustomerService {
     
     @Autowired
     private AddressRepository addressRepository;
+
+    @Autowired
+    private AddressService addressService;
 
     public Customer save(Customer customer) {
 
@@ -50,7 +55,9 @@ public class CustomerService {
                     customer.getAddresses().add(addressToSave);
                 });
 
-                return customerRepository.save(customer);
+                Customer customerToSave = checkAndChooseMainAddress(customer);
+
+                return customerRepository.save(customerToSave);
             } else {
                 throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
             }
@@ -58,6 +65,25 @@ public class CustomerService {
             throw new AddressNotFoundException(MSG_ADDRESS_NOT_FOUND);
         } catch (DataIntegrityViolationException e) {
             throw new AdressInUseException(MSG_ADRESS_IN_USE);
+        }
+    }
+
+    public Customer addAdressToCustomer(Long customerId, Address address) {
+        Address addressToSave = addressService.save(address);
+        Customer customer = customerRepository.findById(customerId).orElse(null);
+
+        try {
+            if(customer.getAddresses().size() <= 5){
+                customer.getAddresses().add(addressToSave);
+                checkAndChooseMainAddress(customer);
+                Customer customerToSave = customerRepository.save(customer);
+
+                return customerToSave;
+            } else {
+                throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
+            }
+        } catch (NullPointerException e) {
+            throw new EntityNotFoundException(String.format(MSG_CUSTOMER_NOT_FOUND, customerId));
         }
     }
 
@@ -76,6 +102,38 @@ public class CustomerService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         String.format(MSG_CUSTOMER_NOT_FOUND, customerId)
                 ));
+    }
+
+    public Customer chooseMainAddress(Long customerId, Long addressId) {
+        Customer customer = findOrFail(customerId);
+        Address address = addressService.findOrFail(addressId);
+
+        if(customer.getAddresses().contains(address)){
+            for (Address address1 : customer.getAddresses()) {
+                address1.setMain(false);
+            }
+            address.setMain(true);
+
+            return customer;
+        } else {
+            throw new AddressNotOfCustomerException(MSG_ADDRESS_NOT_OF_CUSTOMER);
+        }
+    }
+
+    public Customer checkAndChooseMainAddress(Customer customer) {
+        boolean hasMain = false;
+
+        for (Address address : customer.getAddresses()) {
+            if(address.isMain()) {
+                hasMain = true;
+            }
+        }
+
+        if (!hasMain && !customer.getAddresses().isEmpty()) {
+            customer.getAddresses().get(0).setMain(true);
+        }
+
+        return customer;
     }
 
 //    private void verifyCustomer(Customer customer) {

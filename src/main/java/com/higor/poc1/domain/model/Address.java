@@ -32,6 +32,13 @@ public class Address {
     @NotNull
     private String state;
 
+    @Column(name = "is_main")
+    private boolean main;
+
+    public Address() {
+        this.main = false;
+    }
+
     public Long getId() {
         return id;
     }
@@ -86,6 +93,14 @@ public class Address {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public boolean isMain() {
+        return main;
+    }
+
+    public void setMain(boolean main) {
+        this.main = main;
     }
 
     @Override
