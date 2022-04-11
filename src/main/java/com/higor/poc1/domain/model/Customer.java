@@ -2,9 +2,8 @@ package com.higor.poc1.domain.model;
 
 import com.higor.poc1.domain.enumerator.CustomerGroupSequenceProvider;
 import com.higor.poc1.domain.enumerator.CustomerType;
-import org.hibernate.validator.constraints.br.CNPJ;
-import org.hibernate.validator.constraints.br.CPF;
 import org.hibernate.validator.group.GroupSequenceProvider;
+import org.springframework.context.annotation.Conditional;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -14,7 +13,7 @@ import javax.validation.constraints.Pattern;
 import java.util.*;
 
 @Entity
-@GroupSequenceProvider(CustomerGroupSequenceProvider.class)
+//@GroupSequenceProvider(CustomerGroupSequenceProvider.class)
 public class Customer {
 
     @Id
@@ -29,8 +28,8 @@ public class Customer {
     private String email;
 
     @NotBlank(message = "Register number cannot be blank")
-//    @CPF(groups = CustomerType.CpfGroup.class)
-//    @CNPJ(groups = CustomerType.CnpjGroup.class)
+//    @CPF(groups = CpfGroup.class)
+//    @CNPJ(groups = CnpjGroup.class)
     @Column(name = "register_number")
     private String registerNumber;
 
@@ -38,8 +37,8 @@ public class Customer {
     @NotNull(message = "Type cannot be null")
     private CustomerType type;
 
-//    @NotBlank(message = "Phone Number cannot be null")
-//    @Pattern(regexp = "\\d{4}-\\d{4}")
+    @NotBlank(message = "Phone Number cannot be null")
+    @Pattern(regexp = "\\d{4}-\\d{4}")
     @Column(name = "phone_number")
     private String phoneNumber;
 

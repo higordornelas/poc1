@@ -73,12 +73,16 @@ public class CustomerController {
 
     @PutMapping("/{customerId}")
     public CustomerDTO updateCustomer(@PathVariable Long customerId, @Valid @RequestBody CustomerDTO customerDTO) {
-        Customer customer = customerDTODisassembler.toDomainObject(customerDTO);
-        Customer thisCustomer = customerService.findOrFail(customerId);
+        try {
+            Customer customer = customerDTODisassembler.toDomainObject(customerDTO);
+            Customer thisCustomer = customerService.findOrFail(customerId);
 
-        BeanUtils.copyProperties(customer, thisCustomer, "id");
+            BeanUtils.copyProperties(customer, thisCustomer, "id");
 
-        return customerDTOAssembler.toDTO(customerService.save(thisCustomer));
+            return customerDTOAssembler.toDTO(customerService.save(thisCustomer));
+        } catch (NoSuchElementException e) {
+            throw new AddressNotFoundException(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{customerId}")

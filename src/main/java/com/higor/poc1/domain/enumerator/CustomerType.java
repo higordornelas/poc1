@@ -26,10 +26,4 @@ public enum CustomerType {
     public Class<?> getGroup() {
         return group;
     }
-
-    public interface CpfGroup {
-    }
-
-    public interface CnpjGroup {
-    }
 }
