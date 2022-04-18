@@ -1,5 +1,8 @@
 package com.higor.poc1.domain.model;
 
+import com.higor.poc1.api.core.validation.DTOValidation;
+import com.higor.poc1.api.core.validation.EmailCustom;
+import com.higor.poc1.api.core.validation.PhoneNumber;
 import com.higor.poc1.domain.enumerator.CustomerGroupSequenceProvider;
 import com.higor.poc1.domain.enumerator.CustomerType;
 import org.hibernate.validator.group.GroupSequenceProvider;
@@ -10,6 +13,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import javax.validation.groups.Default;
 import java.util.*;
 
 @Entity
@@ -24,7 +28,7 @@ public class Customer {
     private String name;
 
     @NotBlank
-    @Email(message = "Email should be valid")
+    @EmailCustom(groups = {Default.class, DTOValidation.class})
     private String email;
 
     @NotBlank(message = "Register number cannot be blank")
@@ -38,7 +42,7 @@ public class Customer {
     private CustomerType type;
 
     @NotBlank(message = "Phone Number cannot be null")
-    @Pattern(regexp = "\\d{4}-\\d{4}")
+    @PhoneNumber(groups = {Default.class, DTOValidation.class})
     @Column(name = "phone_number")
     private String phoneNumber;
 

@@ -1,14 +1,12 @@
 package com.higor.poc1.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.higor.poc1.api.assembler.AddressDTOAssembler;
 import com.higor.poc1.api.assembler.AddressDTODisassembler;
 import com.higor.poc1.api.model.AddressDTO;
 import com.higor.poc1.domain.model.Address;
-import com.higor.poc1.domain.model.Customer;
 import com.higor.poc1.domain.repository.AddressRepository;
 import com.higor.poc1.domain.service.AddressService;
-import org.springframework.beans.BeanUtils;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,12 +14,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.lang.reflect.Field;
-import java.util.Map;
+import javax.validation.Validator;
 
 @RestController
 @RequestMapping(value = "/addresses", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -38,6 +34,9 @@ public class AddressController {
 
     @Autowired
     private AddressDTODisassembler addressDTODisassembler;
+
+    @Autowired
+    private Validator validator;
 
     @GetMapping
     public Page<AddressDTO> getAddress(
@@ -68,12 +67,10 @@ public class AddressController {
 
     @PutMapping("/{addressId}")
     public AddressDTO updateAddress(@PathVariable Long addressId, @Valid @RequestBody AddressDTO addressDTO) {
-        Address address = addressDTODisassembler.toDomainObject(addressDTO);
-        Address thisAddress = addressService.findOrFail(addressId);
+//        Address address = addressDTODisassembler.toDomainObject(addressDTO);
+        Address addressToSave = addressService.update(addressId, addressDTO);
 
-        BeanUtils.copyProperties(address, thisAddress, "id");
-
-        return addressDTOAssembler.toDTO(addressService.save(thisAddress));
+        return addressDTOAssembler.toDTO(addressService.save(addressToSave));
     }
 
     @DeleteMapping("/{addressId}")
@@ -83,26 +80,10 @@ public class AddressController {
     }
 
     @PatchMapping("/{addressId}")
-    public AddressDTO patchAddress(@PathVariable Long addressId, @Valid @RequestBody Map<String, Object> fields) {
-        Address thisAddress = addressService.findOrFail(addressId);
+    public AddressDTO patchAddress(@PathVariable Long addressId, @RequestBody AddressDTO addressDTO) {
+        Address patched = addressService.patch(addressId, addressDTO);
 
-        merge(fields, thisAddress);
-
-        return updateAddress(addressId, addressDTOAssembler.toDTO(thisAddress));
-    }
-
-    private void merge(Map<String, Object> sourceFields, Address addressToPatch) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        Address thisAddress = objectMapper.convertValue(sourceFields, Address.class);
-
-        sourceFields.forEach((propertyName, propertyValue) -> {
-            Field field = ReflectionUtils.findField(Address.class, propertyName);
-            field.setAccessible(true);
-
-            Object newValue = ReflectionUtils.getField(field, thisAddress);
-
-            ReflectionUtils.setField(field, addressToPatch, newValue);
-        });
+        return updateAddress(addressId, addressDTOAssembler.toDTO(patched));
     }
 
     @GetMapping("/search")

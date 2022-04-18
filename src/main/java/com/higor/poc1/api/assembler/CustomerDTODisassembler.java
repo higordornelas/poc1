@@ -4,7 +4,7 @@ import com.higor.poc1.api.model.AddressDTO;
 import com.higor.poc1.api.model.CustomerDTO;
 import com.higor.poc1.domain.model.Address;
 import com.higor.poc1.domain.model.Customer;
-import com.higor.poc1.domain.repository.AddressRepository;
+import com.higor.poc1.domain.service.AddressService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +15,10 @@ import java.util.List;
 public class CustomerDTODisassembler {
 
     @Autowired
-    AddressRepository addressRepository;
+    AddressDTODisassembler addressDTODisassembler;
+
+    @Autowired
+    AddressService addressService;
 
     public Customer toDomainObject(CustomerDTO customerDTO) {
         Customer customer = new Customer();
@@ -29,7 +32,8 @@ public class CustomerDTODisassembler {
         List<Address> addresses = new ArrayList<>();
         addressDTOs.forEach(addressDTO -> {
             Address address = new Address();
-            address = addressRepository.findById(addressDTO.getId()).get();
+            address = addressDTODisassembler.toDomainObject(addressDTO);
+            addressService.save(address);
             addresses.add(address);
         });
 

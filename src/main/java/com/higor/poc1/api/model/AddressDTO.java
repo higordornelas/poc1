@@ -1,40 +1,44 @@
 package com.higor.poc1.api.model;
 
+import com.higor.poc1.api.core.validation.DTOValidation;
+import com.higor.poc1.api.core.validation.ZipCode;
+
 import javax.persistence.Column;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
+import javax.validation.groups.Default;
 
 public class AddressDTO {
 
-    private long id;
+    private Long id;
 
-    @NotNull
+    @NotBlank
     private String street;
 
-    @NotNull
+    @NotBlank
     private String number;
 
-    @NotNull
+    @NotBlank
     private String district;
 
-    @NotNull
+    @NotBlank
     private String city;
 
-    @NotNull
-    @Pattern(regexp = "\\d{5}-\\d{3}")
+    @NotBlank
+    @ZipCode(groups = {Default.class, DTOValidation.class})
     @Column(name = "zip_code")
     private String zipCode;
 
-    @NotNull
+    @NotBlank
     private String state;
 
     private boolean isMain;
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

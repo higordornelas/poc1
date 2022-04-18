@@ -24,7 +24,7 @@ public class AddressDTOAssembler {
         return addressDTO;
     }
 
-    public List<AddressDTO> toCollectionDTO(List<Address> addresss) {
-        return addresss.stream().map(address -> toDTO(address)).collect(Collectors.toList());
+    public List<AddressDTO> toCollectionDTO(List<Address> addresses) {
+        return addresses.stream().map(address -> toDTO(address)).collect(Collectors.toList());
     }
 }

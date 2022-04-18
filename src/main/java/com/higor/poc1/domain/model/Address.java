@@ -1,8 +1,12 @@
 package com.higor.poc1.domain.model;
 
+import com.higor.poc1.api.core.validation.DTOValidation;
+import com.higor.poc1.api.core.validation.ZipCode;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import javax.validation.groups.Default;
 import java.util.Objects;
 
 @Entity
@@ -25,7 +29,7 @@ public class Address {
     private String city;
 
     @NotNull
-    @Pattern(regexp = "\\d{5}-\\d{3}")
+    @ZipCode(groups = {Default.class, DTOValidation.class})
     @Column(name = "zip_code")
     private String zipCode;
 

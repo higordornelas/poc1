@@ -1,25 +1,31 @@
 package com.higor.poc1.api.model;
 
+import com.higor.poc1.api.core.validation.DTOValidation;
+import com.higor.poc1.api.core.validation.EmailCustom;
+import com.higor.poc1.api.core.validation.PhoneNumber;
 import com.higor.poc1.domain.enumerator.CustomerType;
 
 import javax.persistence.Column;
+import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
+import javax.validation.groups.ConvertGroup;
+import javax.validation.groups.Default;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CustomerDTO {
 
-    private long id;
+    private Long id;
 
     @NotBlank
     private String name;
 
     @NotBlank
-    @Email
+    @EmailCustom(groups = {Default.class, DTOValidation.class})
     private String email;
+
 
     @NotBlank
 //    @CPF(groups = CpfGroup.class)
@@ -30,7 +36,7 @@ public class CustomerDTO {
     private CustomerType type;
 
     @NotBlank
-    @Pattern(regexp = "\\d{4}-\\d{4}")
+    @PhoneNumber(groups = {Default.class, DTOValidation.class})
     @Column(name = "phone_number")
     private String phoneNumber;
 
