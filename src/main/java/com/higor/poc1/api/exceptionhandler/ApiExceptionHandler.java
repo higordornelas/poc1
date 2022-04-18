@@ -21,10 +21,10 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import javax.validation.ConstraintViolation;
+import javax.persistence.RollbackException;
 import javax.validation.ConstraintViolationException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
@@ -33,6 +33,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @Autowired
     private MessageSource messageSource;
 
+    @ExceptionHandler(Exception.class)
     protected ResponseEntity<Object> handleUncaught(Exception ex, WebRequest request){
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         ProblemType problemType = ProblemType.SYSTEM_ERROR;
@@ -197,6 +198,36 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         String detail = ex.getMessage();
 
         Problem problem = createProblemBuilder(status, problemType, detail);
+
+        return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    protected ResponseEntity<?> handleResourceNotFound(ResourceNotFoundException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ProblemType problemType = ProblemType.RESOURCE_NOT_FOUND;
+        String detail = "Can't find one or more resource(s). Please check any typos and try again.";
+
+        Problem problem = createProblemBuilder(status, problemType, detail);
+
+        return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    protected ResponseEntity<?> handleConstraintViolation(ConstraintViolationException ex, WebRequest request) {
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ProblemType problemType = ProblemType.INVALID_PARAMETER;
+        String detail = "One or more fields are invalid. Please correct it and try again.";
+
+        List<Problem.Field> problems = ex.getConstraintViolations().stream()
+                .map(violation -> {
+                    String message = violation.getMessage();
+                    return createFieldBuilder(violation.getPropertyPath().toString(), message);
+                })
+                .collect(Collectors.toList());
+
+        Problem problem = createProblemBuilder(status, problemType, detail, problems);
 
         return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
     }

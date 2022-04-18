@@ -1,8 +1,10 @@
 package com.higor.poc1.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.higor.poc1.api.assembler.AddressDTOAssembler;
+import com.higor.poc1.api.assembler.AddressDTODisassembler;
 import com.higor.poc1.api.assembler.CustomerDTOAssembler;
 import com.higor.poc1.api.assembler.CustomerDTODisassembler;
+import com.higor.poc1.api.core.validation.DTOValidation;
 import com.higor.poc1.api.model.AddressDTO;
 import com.higor.poc1.api.model.CustomerDTO;
 import com.higor.poc1.domain.exception.AddressNotFoundException;
@@ -20,13 +22,17 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
-import java.lang.reflect.Field;
-import java.util.Map;
+import javax.validation.Validator;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/customers", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -39,10 +45,22 @@ public class CustomerController {
     private CustomerRepository customerRepository;
 
     @Autowired
-    CustomerDTOAssembler customerDTOAssembler;
+    private CustomerDTOAssembler customerDTOAssembler;
 
     @Autowired
-    CustomerDTODisassembler customerDTODisassembler;
+    private CustomerDTODisassembler customerDTODisassembler;
+
+    @Autowired
+    private AddressDTODisassembler addressDTODisassembler;
+
+    @Autowired
+    private AddressService addressService;
+
+    @Autowired
+    private AddressDTOAssembler addressDTOAssembler;
+
+    @Autowired
+    private Validator validator;
 
     @GetMapping
     public Page<CustomerDTO> getCustomer(
@@ -52,7 +70,7 @@ public class CustomerController {
 
         Page<Customer> customerPage = customerRepository.findAll(pageable);
 
-        Page<CustomerDTO> customerDtoPage = customerPage.map(customer -> customerDTOAssembler.toDTO(customer));
+        Page<CustomerDTO> customerDtoPage = customerPage.map(customer -> customerService.maskData(customer));
 
         return customerDtoPage;
     }
@@ -60,24 +78,22 @@ public class CustomerController {
     @GetMapping("/{customerId}")
     public CustomerDTO findCustomer(@PathVariable Long customerId) {
         Customer customer = customerService.findOrFail(customerId);
-        return customerDTOAssembler.toDTO(customer);
+
+        return customerService.maskData(customer);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CustomerDTO addCustomer(@Valid @RequestBody CustomerDTO customerDTO) {
-        try {
-            Customer customer = customerDTODisassembler.toDomainObject(customerDTO);
+        Customer customer = customerDTODisassembler.toDomainObject(customerDTO);
 
-            return customerDTOAssembler.toDTO(customerService.save(customer));
-        } catch (NoSuchElementException e) {
-            throw new AddressNotFoundException(e.getMessage());
-        }
+        return customerService.save(customer);
     }
 
     @PostMapping("/{id}/addresses")
     @ResponseStatus(HttpStatus.CREATED)
-    public Customer addAddressToCustomer(@PathVariable Long id, @Valid @RequestBody Address address) {
+    public CustomerDTO addAddressToCustomer(@PathVariable Long id, @Valid @RequestBody AddressDTO addressDTO) {
+        Address address = addressDTODisassembler.toDomainObject(addressDTO);
         return customerService.addAdressToCustomer(id, address);
     }
 
@@ -85,7 +101,7 @@ public class CustomerController {
     public CustomerDTO chooseMainAddress(@PathVariable Long customerId, @PathVariable Long addressId) {
         Customer setMainAddress = customerService.chooseMainAddress(customerId, addressId);
 
-        return customerDTOAssembler.toDTO(setMainAddress);
+        return customerService.save(setMainAddress);
     }
 
     @PutMapping("/{customerId}")
@@ -96,7 +112,7 @@ public class CustomerController {
 
             BeanUtils.copyProperties(customer, thisCustomer, "id");
 
-            return customerDTOAssembler.toDTO(customerService.save(thisCustomer));
+            return customerService.save(thisCustomer);
         } catch (NoSuchElementException e) {
             throw new AddressNotFoundException(e.getMessage());
         }
@@ -109,26 +125,10 @@ public class CustomerController {
     }
 
     @PatchMapping("/{customerId}")
-    public CustomerDTO patchCustomer(@PathVariable Long customerId, @Valid @RequestBody Map<String, Object> fields) {
-        Customer thisCustomer = customerService.findOrFail(customerId);
+    public CustomerDTO patchCustomer(@PathVariable Long customerId, @RequestBody CustomerDTO customerDTO) {
+        CustomerDTO thisCustomer = customerService.patch(customerId, customerDTO);
 
-        merge(fields, thisCustomer);
-
-        return updateCustomer(customerId, customerDTOAssembler.toDTO(thisCustomer));
-    }
-
-    private void merge(Map<String, Object> sourceFields, Customer customerToPatch) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        Customer thisCustomer = objectMapper.convertValue(sourceFields, Customer.class);
-
-        sourceFields.forEach((propertyName, propertyValue) -> {
-            Field field = ReflectionUtils.findField(Customer.class, propertyName);
-            field.setAccessible(true);
-
-            Object newValue = ReflectionUtils.getField(field, thisCustomer);
-
-            ReflectionUtils.setField(field, customerToPatch, newValue);
-        });
+        return updateCustomer(customerId, thisCustomer);
     }
 
     @GetMapping("/search")
