@@ -5,7 +5,6 @@ import com.higor.poc1.api.core.validation.ZipCode;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import javax.validation.groups.Default;
 import java.util.Objects;
 

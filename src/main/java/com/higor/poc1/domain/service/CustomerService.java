@@ -7,6 +7,8 @@ import com.higor.poc1.api.assembler.CustomerDTODisassembler;
 import com.higor.poc1.api.core.validation.DTOValidation;
 import com.higor.poc1.api.model.AddressDTO;
 import com.higor.poc1.api.model.CustomerDTO;
+import com.higor.poc1.domain.enumerator.CnpjGroup;
+import com.higor.poc1.domain.enumerator.CpfGroup;
 import com.higor.poc1.domain.enumerator.CustomerType;
 import com.higor.poc1.domain.exception.*;
 import com.higor.poc1.domain.model.Address;
@@ -276,7 +278,13 @@ public class CustomerService {
     }
 
     public void validate (Customer customer) {
-        Set<ConstraintViolation<Customer>> violations = validator.validate(customer, DTOValidation.class);
+        Set<ConstraintViolation<Customer>> violations = null;
+        
+        if (customer.getType() == CustomerType.LEGAL_PERSON){
+            violations = validator.validate(customer, DTOValidation.class, CpfGroup.class);
+        } else if (customer.getType() == CustomerType.JURIDICAL_PERSON){
+            violations = validator.validate(customer, DTOValidation.class, CnpjGroup.class);
+        }
 
         if (!violations.isEmpty()) {
             List<String> problems = null;

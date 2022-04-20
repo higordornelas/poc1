@@ -1,17 +1,17 @@
 package com.higor.poc1.domain.enumerator;
 
-import com.higor.poc1.domain.model.Customer;
+import com.higor.poc1.api.model.CustomerDTO;
 import org.hibernate.validator.spi.group.DefaultGroupSequenceProvider;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CustomerGroupSequenceProvider implements DefaultGroupSequenceProvider<Customer> {
+public class CustomerGroupSequenceProvider implements DefaultGroupSequenceProvider<CustomerDTO> {
 
     @Override
-    public List<Class<?>> getValidationGroups(Customer customer) {
+    public List<Class<?>> getValidationGroups(CustomerDTO customer) {
         List<Class<?>> groups = new ArrayList<>();
-        groups.add(Customer.class);
+        groups.add(CustomerDTO.class);
 
         if (isSelectedCustomer(customer)) {
             groups.add((customer.getType().getGroup()));
@@ -20,7 +20,7 @@ public class CustomerGroupSequenceProvider implements DefaultGroupSequenceProvid
         return groups;
     }
 
-    protected boolean isSelectedCustomer(Customer customer) {
+    protected boolean isSelectedCustomer(CustomerDTO customer) {
         return customer != null && customer.getType() != null;
     }
 }

@@ -3,10 +3,11 @@ package com.higor.poc1.domain.model;
 import com.higor.poc1.api.core.validation.DTOValidation;
 import com.higor.poc1.api.core.validation.EmailCustom;
 import com.higor.poc1.api.core.validation.PhoneNumber;
-import com.higor.poc1.domain.enumerator.CustomerGroupSequenceProvider;
+import com.higor.poc1.domain.enumerator.CnpjGroup;
+import com.higor.poc1.domain.enumerator.CpfGroup;
 import com.higor.poc1.domain.enumerator.CustomerType;
-import org.hibernate.validator.group.GroupSequenceProvider;
-import org.springframework.context.annotation.Conditional;
+import org.hibernate.validator.constraints.br.CNPJ;
+import org.hibernate.validator.constraints.br.CPF;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
@@ -14,7 +15,6 @@ import javax.validation.groups.Default;
 import java.util.*;
 
 @Entity
-//@GroupSequenceProvider(CustomerGroupSequenceProvider.class)
 public class Customer {
 
     @Id
@@ -29,8 +29,8 @@ public class Customer {
     private String email;
 
     @NotBlank(message = "Register number cannot be blank")
-//    @CPF(groups = CpfGroup.class)
-//    @CNPJ(groups = CnpjGroup.class)
+    @CPF(groups = CpfGroup.class)
+    @CNPJ(groups = CnpjGroup.class)
     @Column(name = "register_number")
     private String registerNumber;
 
