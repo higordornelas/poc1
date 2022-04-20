@@ -37,7 +37,7 @@ public class Address {
     private String state;
 
     @Column(name = "is_main")
-    private boolean main;
+    private Boolean main;
 
     public Address() {
         this.main = false;
@@ -99,7 +99,7 @@ public class Address {
         this.state = state;
     }
 
-    public boolean isMain() {
+    public Boolean isMain() {
         return main;
     }
 

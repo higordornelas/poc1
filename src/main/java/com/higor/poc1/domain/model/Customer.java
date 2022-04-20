@@ -9,10 +9,7 @@ import org.hibernate.validator.group.GroupSequenceProvider;
 import org.springframework.context.annotation.Conditional;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
+import javax.validation.constraints.*;
 import javax.validation.groups.Default;
 import java.util.*;
 
@@ -47,6 +44,7 @@ public class Customer {
     private String phoneNumber;
 
     @OneToMany(cascade = CascadeType.PERSIST)
+    @NotEmpty
     private List<Address> addresses = new ArrayList<>();
 
     public Long getId() {

@@ -9,6 +9,7 @@ import javax.persistence.Column;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.ConvertGroup;
 import javax.validation.groups.Default;
@@ -40,6 +41,7 @@ public class CustomerDTO {
     @Column(name = "phone_number")
     private String phoneNumber;
 
+    @NotEmpty
     private List<AddressDTO> addresses = new ArrayList<>();
 
     public long getId() {

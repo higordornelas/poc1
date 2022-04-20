@@ -81,6 +81,9 @@ public class AddressService {
             if (addressDTO.getState() != null) {
                 patched.setState(addressDTO.getState());
             }
+            if (addressDTO.isMain() != null) {
+                patched.setMain(addressDTO.isMain());
+            }
         } catch (IllegalArgumentException e) {
             throw new ResourceNotFoundException(e.getMessage());
         }
@@ -106,7 +109,7 @@ public class AddressService {
     public Address update(Long addressId, AddressDTO addressDTO) {
         Address thisAddress = findOrFail(addressId);
 
-        BeanUtils.copyProperties(addressDTO, thisAddress, "id", "main");
+        BeanUtils.copyProperties(addressDTO, thisAddress, "id");
 
         return thisAddress;
     }

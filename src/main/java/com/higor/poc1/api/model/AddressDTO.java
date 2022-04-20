@@ -32,7 +32,7 @@ public class AddressDTO {
     @NotBlank
     private String state;
 
-    private boolean isMain;
+    private Boolean isMain;
 
     public Long getId() {
         return id;
@@ -90,7 +90,7 @@ public class AddressDTO {
         this.state = state;
     }
 
-    public boolean isMain() {
+    public Boolean isMain() {
         return isMain;
     }
 
