@@ -12,6 +12,7 @@ import org.hibernate.validator.constraints.br.CPF;
 import org.hibernate.validator.group.GroupSequenceProvider;
 
 import javax.persistence.Column;
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -45,6 +46,7 @@ public class CustomerDTO {
     private String phoneNumber;
 
     @NotEmpty
+    @Valid
     private List<AddressDTO> addresses = new ArrayList<>();
 
     public long getId() {

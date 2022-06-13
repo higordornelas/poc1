@@ -10,6 +10,7 @@ import org.hibernate.validator.constraints.br.CNPJ;
 import org.hibernate.validator.constraints.br.CPF;
 
 import javax.persistence.*;
+import javax.validation.Valid;
 import javax.validation.constraints.*;
 import javax.validation.groups.Default;
 import java.util.*;
@@ -43,8 +44,9 @@ public class Customer {
     @Column(name = "phone_number")
     private String phoneNumber;
 
-    @OneToMany(cascade = CascadeType.PERSIST)
+    @OneToMany(cascade = CascadeType.MERGE) //persist
     @NotEmpty
+    @Valid
     private List<Address> addresses = new ArrayList<>();
 
     public Long getId() {
