@@ -5,7 +5,6 @@ import com.higor.poc1.api.core.validation.ZipCode;
 
 import javax.persistence.Column;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 import javax.validation.groups.Default;
 
 public class AddressDTO {
@@ -32,7 +31,7 @@ public class AddressDTO {
     @NotBlank
     private String state;
 
-    private boolean isMain;
+    private Boolean isMain;
 
     public Long getId() {
         return id;
@@ -90,7 +89,7 @@ public class AddressDTO {
         this.state = state;
     }
 
-    public boolean isMain() {
+    public Boolean isMain() {
         return isMain;
     }
 

@@ -4,11 +4,9 @@ import com.higor.poc1.api.assembler.AddressDTOAssembler;
 import com.higor.poc1.api.assembler.AddressDTODisassembler;
 import com.higor.poc1.api.assembler.CustomerDTOAssembler;
 import com.higor.poc1.api.assembler.CustomerDTODisassembler;
-import com.higor.poc1.api.core.validation.DTOValidation;
 import com.higor.poc1.api.model.AddressDTO;
 import com.higor.poc1.api.model.CustomerDTO;
 import com.higor.poc1.domain.exception.AddressNotFoundException;
-import com.higor.poc1.domain.exception.ResourceNotFoundException;
 import com.higor.poc1.domain.model.Address;
 import com.higor.poc1.domain.model.Customer;
 import com.higor.poc1.domain.repository.CustomerRepository;
@@ -22,20 +20,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
 import javax.validation.Validator;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/customers", produces = MediaType.APPLICATION_JSON_VALUE)
+@Transactional
 public class CustomerController {
 
     @Autowired
@@ -94,7 +88,13 @@ public class CustomerController {
     @ResponseStatus(HttpStatus.CREATED)
     public CustomerDTO addAddressToCustomer(@PathVariable Long id, @Valid @RequestBody AddressDTO addressDTO) {
         Address address = addressDTODisassembler.toDomainObject(addressDTO);
-        return customerService.addAdressToCustomer(id, address);
+        Customer customer = customerService.addAdressToCustomer(id, address);
+
+        if (address.isMain()) {
+            chooseMainAddress(id, address.getId());
+        }
+
+        return customerService.save(customer);
     }
 
     @GetMapping("/{customerId}/addresses/{addressId}/main")
@@ -127,6 +127,7 @@ public class CustomerController {
     @PatchMapping("/{customerId}")
     public CustomerDTO patchCustomer(@PathVariable Long customerId, @RequestBody CustomerDTO customerDTO) {
         CustomerDTO thisCustomer = customerService.patch(customerId, customerDTO);
+        customerService.checkMainAddress(thisCustomer);
 
         return updateCustomer(customerId, thisCustomer);
     }

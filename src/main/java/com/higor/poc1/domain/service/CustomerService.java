@@ -3,9 +3,12 @@ package com.higor.poc1.domain.service;
 import com.higor.poc1.api.assembler.AddressDTOAssembler;
 import com.higor.poc1.api.assembler.AddressDTODisassembler;
 import com.higor.poc1.api.assembler.CustomerDTOAssembler;
+import com.higor.poc1.api.assembler.CustomerDTODisassembler;
 import com.higor.poc1.api.core.validation.DTOValidation;
 import com.higor.poc1.api.model.AddressDTO;
 import com.higor.poc1.api.model.CustomerDTO;
+import com.higor.poc1.domain.enumerator.CnpjGroup;
+import com.higor.poc1.domain.enumerator.CpfGroup;
 import com.higor.poc1.domain.enumerator.CustomerType;
 import com.higor.poc1.domain.exception.*;
 import com.higor.poc1.domain.model.Address;
@@ -16,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.ConstraintViolation;
@@ -39,6 +43,10 @@ public class CustomerService {
 
     public static final String MSG_ADRESS_IN_USE = "Address already registered to another Customer!";
 
+    public static final String MSG_TOO_MANY_MAIN_ADDRESSES = "Customer can't have more than one main address!";
+
+    public static final String MSG_NO_MAIN_ADDRESSES = "Customer must have a main address!";
+
     @Autowired
     private CustomerRepository customerRepository;
     
@@ -60,6 +68,9 @@ public class CustomerService {
     @Autowired
     private AddressDTODisassembler addressDTODisassembler;
 
+    @Autowired
+    private CustomerDTODisassembler customerDTODisassembler;
+
     public CustomerDTO save(Customer customer) {
 
         try {
@@ -72,10 +83,10 @@ public class CustomerService {
                     customer.getAddresses().add(addressToSave);
                 });
 
-                Customer customerToSave = checkAndChooseMainAddress(customer);
-                customerRepository.save(customerToSave);
+                checkMainAddress(customer);
+                customerRepository.save(customer);
 
-                return maskData(customerToSave);
+                return maskData(customer);
             } else {
                 throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
             }
@@ -86,7 +97,8 @@ public class CustomerService {
         }
     }
 
-    @Transactional
+
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = {NoMainAddressException.class, TooManyMainAddressesException.class})
     public CustomerDTO patch (Long id, CustomerDTO customerDTO) {
         Customer thisCustomer = findOrFail(id);
 
@@ -108,6 +120,7 @@ public class CustomerService {
             }
 
             validate(thisCustomer);
+            checkMainAddress(customerDTOAssembler.toDTO(thisCustomer));
 
             if (!customerDTO.getAddresses().isEmpty()) {
                 for (AddressDTO addressDTO : customerDTO.getAddresses()) {
@@ -127,16 +140,16 @@ public class CustomerService {
         return customerDTOAssembler.toDTO(thisCustomer);
     }
 
-    public CustomerDTO addAdressToCustomer(Long customerId, Address address) {
-        Address addressToSave = addressService.save(address);
+    @Transactional
+    public Customer addAdressToCustomer(Long customerId, Address address) {
+        addressService.save(address);
         Customer customer = customerRepository.findById(customerId).orElse(null);
 
         try {
             if(customer.getAddresses().size() <= 5){
-                customer.getAddresses().add(addressToSave);
-                checkAndChooseMainAddress(customer);
+                customer.getAddresses().add(address);
 
-                return save(customer);
+                return customer;
             } else {
                 throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
             }
@@ -178,6 +191,18 @@ public class CustomerService {
         }
     }
 
+    public boolean checkIfHaveMainAddress(Customer customer) {
+        boolean hasMain = false;
+
+        for (Address address : customer.getAddresses()) {
+            if (address.isMain()) {
+                hasMain = true;
+            }
+        }
+
+        return hasMain;
+    }
+
     public Customer checkAndChooseMainAddress(Customer customer) {
         boolean hasMain = false;
 
@@ -196,6 +221,38 @@ public class CustomerService {
         }
 
         return customer;
+    }
+
+    public void checkMainAddress(Customer customer) {
+        int main = 0;
+
+        for (Address address : customer.getAddresses()) {
+            if(address.isMain()) {
+                main++;
+            }
+        }
+
+        if(main > 1) {
+            throw new TooManyMainAddressesException(MSG_TOO_MANY_MAIN_ADDRESSES);
+        } else if(main == 0) {
+            throw new NoMainAddressException(MSG_NO_MAIN_ADDRESSES);
+        }
+    }
+
+    public void checkMainAddress(CustomerDTO customerDTO) {
+        int main = 0;
+
+        for (AddressDTO addressDTO : customerDTO.getAddresses()) {
+            if(addressDTO.isMain()) {
+                main++;
+            }
+        }
+
+        if(main > 1) {
+            throw new TooManyMainAddressesException(MSG_TOO_MANY_MAIN_ADDRESSES);
+        } else if(main == 0) {
+            throw new NoMainAddressException(MSG_NO_MAIN_ADDRESSES);
+        }
     }
 
     public CustomerDTO maskData (Customer customer) {
@@ -221,7 +278,13 @@ public class CustomerService {
     }
 
     public void validate (Customer customer) {
-        Set<ConstraintViolation<Customer>> violations = validator.validate(customer, DTOValidation.class);
+        Set<ConstraintViolation<Customer>> violations = null;
+        
+        if (customer.getType() == CustomerType.LEGAL_PERSON){
+            violations = validator.validate(customer, DTOValidation.class, CpfGroup.class);
+        } else if (customer.getType() == CustomerType.JURIDICAL_PERSON){
+            violations = validator.validate(customer, DTOValidation.class, CnpjGroup.class);
+        }
 
         if (!violations.isEmpty()) {
             List<String> problems = null;

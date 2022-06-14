@@ -5,7 +5,6 @@ import com.higor.poc1.api.core.validation.ZipCode;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import javax.validation.groups.Default;
 import java.util.Objects;
 
@@ -37,7 +36,7 @@ public class Address {
     private String state;
 
     @Column(name = "is_main")
-    private boolean main;
+    private Boolean main;
 
     public Address() {
         this.main = false;
@@ -99,7 +98,7 @@ public class Address {
         this.state = state;
     }
 
-    public boolean isMain() {
+    public Boolean isMain() {
         return main;
     }
 
