@@ -45,9 +45,31 @@ public class Customer {
     private String phoneNumber;
 
     @OneToMany(cascade = CascadeType.MERGE) //persist
-    @NotEmpty
-    @Valid
+//    @NotEmpty
+//    @Valid
     private List<Address> addresses = new ArrayList<>();
+
+    public Customer() {
+    }
+
+    public Customer(Long id, String name, String email, String registerNumber, CustomerType type, String phoneNumber, List<Address> addresses) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.registerNumber = registerNumber;
+        this.type = type;
+        this.phoneNumber = phoneNumber;
+        this.addresses = addresses;
+    }
+
+    public Customer(String name, String email, String registerNumber, CustomerType type, String phoneNumber, List<Address> addresses) {
+        this.name = name;
+        this.email = email;
+        this.registerNumber = registerNumber;
+        this.type = type;
+        this.phoneNumber = phoneNumber;
+        this.addresses = addresses;
+    }
 
     public Long getId() {
         return id;

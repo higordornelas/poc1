@@ -38,6 +38,27 @@ public class Address {
     @Column(name = "is_main")
     private Boolean main;
 
+    public Address(Long id, String street, String number, String district, String city, String zipCode, String state, Boolean main) {
+        this.id = id;
+        this.street = street;
+        this.number = number;
+        this.district = district;
+        this.city = city;
+        this.zipCode = zipCode;
+        this.state = state;
+        this.main = main;
+    }
+
+    public Address(String street, String number, String district, String city, String zipCode, String state, Boolean main) {
+        this.street = street;
+        this.number = number;
+        this.district = district;
+        this.city = city;
+        this.zipCode = zipCode;
+        this.state = state;
+        this.main = main;
+    }
+
     public Address() {
         this.main = false;
     }

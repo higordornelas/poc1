@@ -57,7 +57,7 @@ public class CustomerController {
     private Validator validator;
 
     @GetMapping
-    public Page<CustomerDTO> getCustomer(
+    public Page<CustomerDTO> getAllCustomers(
             @PageableDefault(sort = "id",
                     direction = Sort.Direction.ASC, page = 0, size = 10)
                     Pageable pageable) {

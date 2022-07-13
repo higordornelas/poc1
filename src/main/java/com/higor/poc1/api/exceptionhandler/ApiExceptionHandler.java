@@ -178,8 +178,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, problem, new HttpHeaders(), status, request);
     }
 
-    @ExceptionHandler(AdressListFullException.class)
-    protected ResponseEntity<?> handleAddressListFull(AdressListFullException ex, WebRequest request) {
+    @ExceptionHandler(AddressListFullException.class)
+    protected ResponseEntity<?> handleAddressListFull(AddressListFullException ex, WebRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         ProblemType problemType = ProblemType.BUSINESS_ERROR;
         String detail = ex.getMessage();

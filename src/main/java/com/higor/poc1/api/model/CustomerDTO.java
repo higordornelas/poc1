@@ -7,6 +7,7 @@ import com.higor.poc1.domain.enumerator.CnpjGroup;
 import com.higor.poc1.domain.enumerator.CpfGroup;
 import com.higor.poc1.domain.enumerator.CustomerGroupSequenceProvider;
 import com.higor.poc1.domain.enumerator.CustomerType;
+import com.higor.poc1.domain.model.Address;
 import org.hibernate.validator.constraints.br.CNPJ;
 import org.hibernate.validator.constraints.br.CPF;
 import org.hibernate.validator.group.GroupSequenceProvider;
@@ -48,6 +49,19 @@ public class CustomerDTO {
     @NotEmpty
     @Valid
     private List<AddressDTO> addresses = new ArrayList<>();
+
+    public CustomerDTO(Long id, String name, String email, String registerNumber, CustomerType type, String phoneNumber, List<AddressDTO> addresses) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.registerNumber = registerNumber;
+        this.type = type;
+        this.phoneNumber = phoneNumber;
+        this.addresses = addresses;
+    }
+
+    public CustomerDTO() {
+    }
 
     public long getId() {
         return id;

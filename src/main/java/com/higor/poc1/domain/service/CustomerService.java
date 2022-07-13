@@ -15,6 +15,7 @@ import com.higor.poc1.domain.model.Address;
 import com.higor.poc1.domain.model.Customer;
 import com.higor.poc1.domain.repository.AddressRepository;
 import com.higor.poc1.domain.repository.CustomerRepository;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -27,6 +28,7 @@ import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,7 +41,7 @@ public class CustomerService {
 
     public static final String MSG_ADDRESS_NOT_OF_CUSTOMER = "Customer with Id %d doesn't have an Address with Id %d";
 
-    public static final String MSG_ADRESS_LIST_FULL = "Customer can't have more than 5 addresses!";
+    public static final String MSG_ADDRESS_LIST_FULL = "Customer can't have more than 5 addresses!";
 
     public static final String MSG_ADRESS_IN_USE = "Address already registered to another Customer!";
 
@@ -71,6 +73,7 @@ public class CustomerService {
     @Autowired
     private CustomerDTODisassembler customerDTODisassembler;
 
+    @Transactional(propagation = Propagation.REQUIRED)
     public CustomerDTO save(Customer customer) {
 
         try {
@@ -79,8 +82,12 @@ public class CustomerService {
                 customer.getAddresses().clear();
 
                 addressList.forEach(address -> {
-                    Address addressToSave = addressRepository.findById(address.getId()).get();
-                    customer.getAddresses().add(addressToSave);
+                    try {
+                        Address addressToSave = addressRepository.findById(address.getId()).get();
+                        customer.getAddresses().add(addressToSave);
+                    } catch (NoSuchElementException e) {
+                        throw new AddressNotFoundException(String.format(MSG_ADDRESS_NOT_FOUND, address.getId()));
+                    }
                 });
 
                 checkMainAddress(customer);
@@ -88,10 +95,8 @@ public class CustomerService {
 
                 return maskData(customer);
             } else {
-                throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
+                throw new AddressListFullException(String.format(MSG_ADDRESS_LIST_FULL));
             }
-        } catch (NoSuchElementException e) {
-            throw new AddressNotFoundException(MSG_ADDRESS_NOT_FOUND);
         } catch (DataIntegrityViolationException e) {
             throw new AdressInUseException(MSG_ADRESS_IN_USE);
         }
@@ -151,11 +156,20 @@ public class CustomerService {
 
                 return customer;
             } else {
-                throw new AdressListFullException(String.format(MSG_ADRESS_LIST_FULL));
+                throw new AddressListFullException(String.format(MSG_ADDRESS_LIST_FULL));
             }
         } catch (NullPointerException e) {
             throw new EntityNotFoundException(String.format(MSG_CUSTOMER_NOT_FOUND, customerId));
         }
+    }
+
+    @Transactional
+    public CustomerDTO updateCustomer(Customer customer) {
+        Customer thisCustomer = findOrFail(customer.getId());
+
+        BeanUtils.copyProperties(customer, thisCustomer, "id");
+
+        return save(thisCustomer);
     }
 
     public void delete(Long customerId) {
@@ -169,10 +183,11 @@ public class CustomerService {
     }
 
     public Customer findOrFail(Long customerId){
-        return customerRepository.findById(customerId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        String.format(MSG_CUSTOMER_NOT_FOUND, customerId)
-                ));
+        Optional<Customer> findById = customerRepository.findById(customerId);
+        if (findById.isEmpty()){
+            throw new EntityNotFoundException(String.format(MSG_CUSTOMER_NOT_FOUND, customerId));
+        }
+        return findById.get();
     }
 
     public Customer chooseMainAddress(Long customerId, Long addressId) {

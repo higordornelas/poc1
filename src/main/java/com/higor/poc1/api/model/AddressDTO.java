@@ -33,6 +33,20 @@ public class AddressDTO {
 
     private Boolean isMain;
 
+    public AddressDTO(Long id, String street, String number, String district, String city, String zipCode, String state, Boolean isMain) {
+        this.id = id;
+        this.street = street;
+        this.number = number;
+        this.district = district;
+        this.city = city;
+        this.zipCode = zipCode;
+        this.state = state;
+        this.isMain = isMain;
+    }
+
+    public AddressDTO() {
+    }
+
     public Long getId() {
         return id;
     }
